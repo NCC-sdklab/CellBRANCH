@@ -34,8 +34,8 @@ Combined Loss: Forward(3.0x) + Reverse(0.3x) + Consistency(0.1x)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/bidirectional-hierarchical-transformer.git
-cd bidirectional-hierarchical-transformer
+git clone https://github.com/NCC-sdklab/MVCell.git
+cd MVcell
 
 # Install dependencies
 pip install -r requirements.txt
