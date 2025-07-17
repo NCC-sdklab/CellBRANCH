@@ -78,12 +78,12 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="bidirectional-hierarchical-transformer",
     version="1.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Seok-Won Jang",
+    author_email="seokwon@ncc.re.kr",
     description="Bidirectional Hierarchical Transformer for Cell Type Annotation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/bidirectional-hierarchical-transformer",
+    url="https://github.com/NCC-sdklab/MVcell",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -112,12 +112,3 @@ setup(
     },
 )
 
----
-
-# requirements.txt
-torch>=2.0.0
-numpy>=1.21.0
-pandas>=1.3.0
-scikit-learn>=1.0.0
-matplotlib>=3.5.0
-tqdm>=4.62.0
