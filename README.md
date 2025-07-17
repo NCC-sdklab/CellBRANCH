@@ -51,10 +51,9 @@ pip install -e .
 Ensure your data files are organized as follows:
 ```
 data/
-├── merged_annlevel_with_new_fin.tsv          # Training data
-├── merged_annlevel_with_new_test_fin.tsv     # Test data
-└── hlca_celltype_tree/
-    └── unique_annotations_ontology_JHL_with_SW.csv  # Ontology file
+├── train_data.tsv    # Training data
+├── test_data.tsv     # Test data
+└── HLCA_tress.csv    # Ontology file
 ```
 
 **Expected data format:**
@@ -63,65 +62,18 @@ data/
   - Confidence score columns: `{tool}_score` (e.g., `singleR_score`, `sctype_score`)
   - Ground truth columns: `ann_level_{level}` (e.g., `ann_level_1`, `ann_level_2`)
 
-### 2. Training
+### 2. Prediction 
 
 ```bash
-# Basic training
-python train.py --data-dir ./data --output-dir ./results
 
-# Training with custom parameters
-python train.py \
-    --data-dir ./data \
-    --output-dir ./results \
-    --epochs 100 \
-    --batch-size 512 \
-    --lr 1e-6 \
-    --d-model 512 \
-    --nhead 16 \
-    --num-layers 4
-
-# Training with ablation (removing specific tools)
-python train.py \
-    --data-dir ./data \
-    --output-dir ./results \
-    --ablation sctype scATOMIC
-```
-
-### 3. Prediction and Evaluation
-
-```bash
-# Test set evaluation
 python predict.py \
-    --model-dir ./results/bidirectional_transformer_seed_9401 \
+    --model-dir ./pretrained_model \
     --data-dir ./data \
-    --mode test
+    --test-file your_data.tsv \
+    --output-dir ./results
 
-# Validation set evaluation
-python predict.py \
-    --model-dir ./results/bidirectional_transformer_seed_9401 \
-    --data-dir ./data \
-    --mode val
-```
 
 ## Command Line Arguments
-
-### Training Script (`train.py`)
-
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| `--data-dir` | str | `.` | Data directory path |
-| `--output-dir` | str | `./results` | Output directory for models and results |
-| `--seed` | int | `9401` | Random seed for reproducibility |
-| `--epochs` | int | `80` | Number of training epochs |
-| `--batch-size` | int | `256` | Training batch size |
-| `--lr` | float | `1e-5` | Learning rate |
-| `--d-model` | int | `256` | Model dimension |
-| `--nhead` | int | `8` | Number of attention heads |
-| `--num-layers` | int | `2` | Number of transformer layers |
-| `--dropout` | float | `0.5` | Dropout rate |
-| `--weight-decay` | float | `5e-3` | Weight decay for optimizer |
-| `--patience` | int | `15` | Early stopping patience |
-| `--ablation` | str* | None | Tools to ablate (space-separated) |
 
 ### Prediction Script (`predict.py`)
 
@@ -129,9 +81,8 @@ python predict.py \
 |----------|------|---------|-------------|
 | `--model-dir` | str | Required | Directory containing trained model |
 | `--data-dir` | str | `.` | Data directory path |
-| `--mode` | str | `test` | Evaluation mode: 'test' or 'val' |
 | `--batch-size` | int | `1024` | Prediction batch size |
-| `--output-dir` | str | None | Output directory (defaults to model-dir) |
+| `--output-dir` | str | './results' | Output directory (defaults to model-dir) |
 
 ## Programmatic Usage
 
@@ -180,9 +131,9 @@ with torch.no_grad():
 - `loss_curve.png`: Loss curve plot
 
 ### Prediction Output
-- `comparison_metrics_for_{mode}.csv`: Detailed metrics comparison
-- `comparison_ann_level_{i}_for_{mode}.png`: Performance comparison plots
-
+- `cell_type_predictions.csv`: cell type prediction
+- `prediction_summary_report.txt`: summarise cell type prediction
+- 
 ## Model Architecture Details
 
 ### Bidirectional Design
