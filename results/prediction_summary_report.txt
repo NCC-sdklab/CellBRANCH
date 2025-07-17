@@ -1,0 +1,42 @@
+Cell Type Annotation Prediction Report
+==================================================
+Total cells predicted: 257,795
+
+ann_level_1 predictions (Top 5):
+------------------------------
+  Immune: 222,333 cells (86.2%)
+  Epithelial: 27,052 cells (10.5%)
+  Endothelial: 4,952 cells (1.9%)
+  Stroma: 3,458 cells (1.3%)
+
+ann_level_2 predictions (Top 5):
+------------------------------
+  Myeloid: 139,886 cells (54.3%)
+  Lymphoid: 82,430 cells (32.0%)
+  Airway epithelium: 14,071 cells (5.5%)
+  Alveolar epithelium: 12,876 cells (5.0%)
+  Blood vessels: 4,428 cells (1.7%)
+
+ann_level_3 predictions (Top 5):
+------------------------------
+  Macrophages: 94,337 cells (36.6%)
+  T cell lineage: 61,047 cells (23.7%)
+  Monocytes: 34,499 cells (13.4%)
+  B cell lineage: 16,214 cells (6.3%)
+  AT2: 11,263 cells (4.4%)
+
+ann_level_4 predictions (Top 5):
+------------------------------
+  Alveolar macrophages: 61,768 cells (24.0%)
+  CD8 T cells: 35,151 cells (13.6%)
+  Interstitial macrophages: 32,569 cells (12.6%)
+  Classical monocytes: 27,746 cells (10.8%)
+  CD4 T cells: 23,369 cells (9.1%)
+
+ann_level_5 predictions (Top 5):
+------------------------------
+  Unknown: 149,559 cells (58.0%)
+  Alveolar Mph CCL3+: 52,661 cells (20.4%)
+  Monocyte-derived Mph: 28,706 cells (11.1%)
+  Alveolar Mph MT-positive: 5,248 cells (2.0%)
+  Goblet (nasal): 4,838 cells (1.9%)
