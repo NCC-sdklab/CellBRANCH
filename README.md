@@ -84,42 +84,6 @@ python predict.py \
 | `--batch-size` | int | `1024` | Prediction batch size |
 | `--output-dir` | str | './results' | Output directory (defaults to model-dir) |
 
-## Programmatic Usage
-
-```python
-from utils import set_seed, load_encoders
-from model import SimpleBidirectionalTransformer
-import torch
-
-# Set random seed
-set_seed(9401)
-
-# Load trained model and encoders
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-enc_in, enc_out = load_encoders("./results/model_directory")
-
-# Initialize model (parameters should match training)
-model = SimpleBidirectionalTransformer(
-    enc_in=enc_in,
-    enc_out=enc_out,
-    ont_df=ont_df,  # Ontology dataframe
-    score_dim=5,    # Number of tools
-    terminal_nodes_idx=terminal_nodes_idx,
-    d_model=256,
-    nhead=8,
-    num_layers=2,
-    device=device
-).to(device)
-
-# Load trained weights
-model.load_state_dict(torch.load("./results/best_model.pth"))
-model.eval()
-
-# Make predictions
-with torch.no_grad():
-    forward_outputs, reverse_outputs = model(cat_features, score_features, enc_in=enc_in)
-    predictions = {lvl: outputs.argmax(-1) for lvl, outputs in forward_outputs.items()}
-```
 
 ## Output Files
 
