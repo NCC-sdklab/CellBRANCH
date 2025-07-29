@@ -83,7 +83,7 @@ python predict.py \
 | `--data-dir` | str | `.` | Data directory path |
 | `--batch-size` | int | `1024` | Prediction batch size |
 | `--output-dir` | str | './results' | Output directory (defaults to model-dir) |
-
+```
 
 ## Output Files
 
