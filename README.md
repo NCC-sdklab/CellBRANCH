@@ -53,7 +53,7 @@ Ensure your data files are organized as follows:
 data/
 ├── train_data.tsv    # Training data
 ├── test_data.tsv     # Test data
-└── HLCA_tress.csv    # Ontology file
+└── HLCA_tree.csv    # Ontology file
 ```
 
 **Expected data format:**
