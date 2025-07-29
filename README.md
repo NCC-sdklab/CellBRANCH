@@ -57,10 +57,10 @@ data/
 ```
 
 **Expected data format:**
-- Training/Test files should contain:
+- Training/prediction files should contain:
   - Tool annotation columns: `{tool}_ann{level}` (e.g., `singleR_ann1`, `sctype_ann2`)
   - Confidence score columns: `{tool}_score` (e.g., `singleR_score`, `sctype_score`)
-  - Ground truth columns: `ann_level_{level}` (e.g., `ann_level_1`, `ann_level_2`)
+  - Ground truth columns: `ann_level_{level}` (e.g., `ann_level_1`, `ann_level_2`) - just for training /  Do not require when prediction
 
 ### 2. Prediction 
 
