@@ -69,7 +69,7 @@ data/
 python predict.py \
     --model-dir ./pretrained_model \
     --data-dir ./data \
-    --test-file your_data.tsv \
+    --test-file ./data/test_set.tsv \ # you can replace your own data
     --output-dir ./results
 
 
