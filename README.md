@@ -51,8 +51,8 @@ pip install -e .
 Ensure your data files are organized as follows:
 ```
 data/
-├── train_data.tsv    # Training data
-├── test_data.tsv     # Test data
+├── train_set.tsv    # Training data
+├── test_set.tsv     # Test data
 └── HLCA_tree.csv    # Ontology file
 ```
 
