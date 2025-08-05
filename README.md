@@ -75,8 +75,6 @@ python predict.py \
 
 ## Command Line Arguments
 
-### Prediction Script (`predict.py`)
-
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
 | `--model-dir` | str | Required | Directory containing trained model |
