@@ -1,0 +1,38 @@
+name: scRAP_base
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  # R-related
+  - r-base=4.4
+  - r-cairo
+
+  # System libraries
+  - gcc_linux-64
+  - gxx_linux-64
+  - gfortran
+  - zlib
+  - libxml2
+  - libcurl
+  - xz
+  - libiconv
+  - r-curl #specifically for dropletutils
+  - r-httr
+  - freetype
+  - libpng
+  - libtiff
+  - libjpeg-turbo
+  - pkg-config # required for ragg
+  - bioconductor-rtracklayer #it is being a pain
+  - r-systemfonts #also being a pain
+  # # Python-related
+  # - python=3.10
+  # - ipykernel
+  # - ipython
+  # - ipywidgets
+  # - leidenalg
+  # 
+  # # Bioconda tools
+  # - celltypist
+
