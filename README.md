@@ -79,11 +79,13 @@ conda activate MVCell_base
 Rscript r-install/MVCell_R_install.R
 ```
 
-```
 ### Install dependencies
+```
 pip install -r requirements.txt
+```
 
 ### Install package
+```
 pip install -e .
 ```
 
