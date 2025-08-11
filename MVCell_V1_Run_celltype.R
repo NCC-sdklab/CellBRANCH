@@ -94,14 +94,19 @@ ok_env <- FALSE
 try({
   cb <- reticulate::conda_binary()
   cb.base <- sub("/bin/(conda|mamba)$", "", cb)
-  ret.path <- file.path(cb.base, "envs", "r-reticulate")
-  if (dir.exists(ret.path)) { reticulate::use_condaenv(ret.path, required = TRUE); ok_env <- TRUE }
+  ret.path <- file.path(cb.base, "envs", "r-reticulate-mvcell")
+  if (dir.exists(ret.path)) { 
+    reticulate::use_condaenv(ret.path, required = TRUE)
+    ok_env <- TRUE
+    message("✅ Successfully activated conda environment: r-reticulate-mvcell")
+  }
 }, silent = TRUE)
-if (!ok_env) log_step("Note: couldn't auto-select conda env for reticulate. If scATOMIC needs Python deps, set RETICULATE_PYTHON or use_condaenv manually.")
 
-suppressPackageStartupMessages({
-  library(scATOMIC)
-})
+if (!ok_env) {
+  log_step("Note: couldn't auto-select conda env for reticulate. If scATOMIC needs Python deps, set RETICULATE_PYTHON or use_condaenv manually.")
+}
+
+library(scATOMIC)
 
 # =====================
 # 1) SingleR (BlueprintEncode)
