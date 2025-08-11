@@ -80,9 +80,12 @@ Rscript MVCell_R_install.R
 
 ```
 ### Install dependencies
+```
 pip install -r requirements.txt
+```
 
 ### Install package
+```
 pip install -e .
 ```
 
