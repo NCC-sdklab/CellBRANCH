@@ -1,4 +1,4 @@
-# config.py
+# configs.py
 """
 Configuration file for Bidirectional Hierarchical Transformer
 """
