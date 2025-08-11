@@ -80,14 +80,85 @@ Rscript r-install/MVCell_R_install.R
 ```
 
 
-# Install dependencies
+### Install dependencies
 pip install -r requirements.txt
 
-# Install package
+### Install package
 pip install -e .
 ```
 
-## Quick Start
+# Quick Start
+
+## Usage Instructions for Cell Type Annotation in MVCell
+
+Although these scripts are not strictly part of MVCell's core code, MVCell requires users to run
+**ScType**, **SingleR**, and **scATOMIC** in R to prepare annotation outputs.
+To simplify this process, two R scripts and dedicated conda environments are provided.
+
+---
+
+### **Requirements**
+
+- A `.h5ad` file containing the **count matrix**.
+- The provided conda environments:
+  - `MVCell_base`
+  - `r-reticulate`
+  - Any additional environments as specified in the installation instructions.
+
+---
+
+### **Step 1 — Convert `.h5ad` to `SingleCellExperiment` (SCE)**
+
+Run the `MVCell_V1_R_init.R` script to:
+- Load the `.h5ad` file
+- Convert it to an `SingleCellExperiment` (SCE) object
+- Generate log-normalized counts (`logcounts`)
+
+```bash
+conda activate MVCell_base
+Rscript MVCell_V1_R_init.R path/to/input_file.h5ad path/to/output_file.rds
+```
+
+> The output `.rds` file will contain the processed SCE object for downstream annotation.
+
+---
+
+### **Step 2 — Run Cell Type Annotation**
+
+Run the `MVCell_V1_Run_celltype.R` script to execute all three annotation methods:
+- **ScType**
+- **SingleR**
+- **scATOMIC**
+
+This script will:
+- Read the processed `.rds` file from Step 1
+- Run each annotation algorithm
+- Save a combined annotation report compatible with MVCell
+
+```bash
+conda activate MVCell_base
+Rscript MVCell_V1_Run_celltype.R path/to/input_file.rds path/to/output_annotations.csv
+```
+
+---
+
+### **Output**
+
+The final annotation report (`.csv`) can be fed directly into MVCell for further processing and analysis.
+
+---
+
+### **Summary Workflow**
+
+1. **Prepare environments** — Follow MVCell installation instructions.
+2. **Convert `.h5ad` → `.rds` (SCE)** — `MVCell_V1_R_init.R`
+3. **Run cell type annotation** — `MVCell_V1_Run_celltype.R`
+4. **Feed output to MVCell**
+
+```text
+.h5ad (counts) → [init script] → SCE (.rds) → [annotation script] → annotations.csv → MVCell
+```
+
 
 ### 1. Data Preparation
 
