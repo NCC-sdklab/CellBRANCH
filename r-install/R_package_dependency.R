@@ -3,7 +3,7 @@
 bioc_packages <- c(
   "BiocParallel",
 #  "DropletUtils",
-#  "scater",
+  "scater",
 #  "scDblFinder",
   "scran",
 #  "scuttle",
@@ -20,6 +20,7 @@ cran_packages <- c(
   #step 2
   "openxlsx",
   "HGNChelper",
+  "devtools"
 #  "igraph",
 #  "leiden"
 )

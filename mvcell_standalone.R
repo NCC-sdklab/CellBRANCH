@@ -46,6 +46,9 @@ args = "/mnt/dks_nas2/data/external/Lung/CCCA/Kim_et_al_2020/Kim2020.h5ad"
 ncore = 8
 
 
+
+
+
 #score function
 #porting nested functions
 ################################################################################
@@ -144,7 +147,11 @@ library(HGNChelper)
 
 #scATOMIC
 library(reticulate)
-use_condaenv("r-reticulate", required = TRUE)
+#extracting and specying path
+cb <- conda_binary()
+cb.base = sub("/bin/(conda|mamba)$", "", cb)
+ret.path = file.path(cb.base, "envs", "r-reticulate")
+use_condaenv(ret.path, required = TRUE)
 reticulate::import("magic")
 library(scATOMIC)
 
@@ -185,8 +192,11 @@ if (length(idx.log) == 0) {
   message("logcounts found. Proceeding...")
 }
 
-message("Running singleR with Human Primary Cell Atlas reference.")
-ref.data = HumanPrimaryCellAtlasData()
+message("Running singleR with Blueprint Encode Data.")
+
+#ref.data = HumanPrimaryCellAtlasData() #this for second model
+ref.data = BlueprintEncodeData() #this is the trained.
+
 singleR.res = SingleR(test = sce,
                       ref = ref.data,
                       labels = ref.data[["label.main"]],
@@ -197,7 +207,6 @@ singleR.df = t(score.output)
 message("SingleR finished.")
 
 message("Running sctype with default reference file.")
-ref.data.path = "/mnt/gluster_server/data/reference/celltype_annotate/"
 db.full = file.path(script.path, "sctype/ScTypeDB_full.xlsx")
 db.df = read.xlsx(db.full)
 gs.list = gene_sets_prepare(path_to_db_file = db.full, cell_type = "Lung")
@@ -302,4 +311,4 @@ celltype.dir = file.path(h5ad_dir, "celltype_annotate")
 if (!dir.exists(celltype.dir)) {
   dir.create(celltype.dir)
 }
-write.table(output.df, file = file.path(celltype.dir, "celltype_annotate_per_cell_extended.tsv"), quote = F, row.names = F, sep = "\t")
+write.table(output.df, file = file.path(celltype.dir, "MVCell_annotate_per_cell_extended.csv"), quote = F, row.names = F, sep = ",")

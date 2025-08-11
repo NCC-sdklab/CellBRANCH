@@ -32,10 +32,53 @@ Combined Loss: Forward(3.0x) + Reverse(0.3x) + Consistency(0.1x)
 
 ## Installation
 
+### 1. Clone the repository
 ```bash
-# Clone the repository
 git clone https://github.com/NCC-sdklab/MVCell.git
-cd MVcell
+cd MVCell
+```
+
+---
+
+### 2. Create the required conda environments
+
+MVCell uses **two** conda environments:
+
+- **`MVCell_base`** → Main environment for MVCell Python + core tools  
+- **`r-reticulate`** → Python environment for R’s `reticulate` interface
+
+Create them from the provided YAML files:
+
+```bash
+# Create MVCell_base
+mamba env create -f r-install/MVCell_env.yaml   # or: conda env create -f ...
+
+# Create r-reticulate
+mamba env create -f r-install/r-reticulate_full_env.yaml
+```
+
+> **Why two environments?**  
+> - Keeping `r-reticulate` separate avoids Python version/package conflicts with the main MVCell environment.  
+> - This separation also makes it easier to reuse `r-reticulate` for other R projects without breaking MVCell.
+
+> **Note:** If you **already have an existing `r-reticulate` environment** from prior R usage,  
+> you do not need to recreate it. Instead, update it to meet MVCell’s minimum requirements:
+> ```bash
+> conda activate r-reticulate
+> pip install --upgrade -r r-install/reticulate_min_req.txt
+> ```
+
+---
+
+### 3. Install remaining R packages
+
+Activate the **`MVCell_base`** environment and run the R install script:
+
+```bash
+conda activate MVCell_base
+Rscript r-install/MVCell_R_install.R
+```
+
 
 # Install dependencies
 pip install -r requirements.txt
