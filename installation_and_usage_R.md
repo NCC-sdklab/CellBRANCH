@@ -39,7 +39,7 @@ The installation process has been tested on Linux-based systems. Other operating
 
 1. **Clone the repository**  
 ```bash
-git clone <git@github.com:NCC-sdklab/MVCell.git>
+git clone git@github.com:NCC-sdklab/MVCell.git
 cd MVCell
 ```
 
@@ -63,7 +63,7 @@ Rscript MVCell_R_install_v2.R
 ### Step 1 — Preprocessing  
 Run the first script to preprocess the `.h5ad` file into an R-compatible format:
 ```bash
-Rscript script_part1.R /path/to/input.h5ad [num_cores] [benchmark_id]
+Rscript MVCell_V2_R_init.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ```
 
 - `num_cores` *(optional)*: Number of CPU cores to use (default: all available minus 2)  
@@ -72,7 +72,7 @@ Rscript script_part1.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ### Step 2 — Annotation  
 Run the second script to perform cell type annotation using all three algorithms:
 ```bash
-Rscript script_part2.R /path/to/input.h5ad [num_cores] [benchmark_id]
+Rscript MVCell_V2_Run_celltype.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ```
 
 ### Step 3 — Output  
