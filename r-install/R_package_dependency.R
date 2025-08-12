@@ -20,7 +20,8 @@ cran_packages <- c(
   #step 2
   "openxlsx",
   "HGNChelper",
-  "devtools"
+  "devtools",
+  "withr"
 #  "igraph",
 #  "leiden"
 )

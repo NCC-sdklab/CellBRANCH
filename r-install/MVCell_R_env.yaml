@@ -26,6 +26,11 @@ dependencies:
   - pkg-config # required for ragg
   - bioconductor-rtracklayer #it is being a pain
   - r-systemfonts #also being a pain
+  - glpk        # for igraph
+  - nodejs      # for V8
+  - libgit2     # for gert
+  - pandoc      # for rmarkdown/knitr/pkgdown
+  - cmake
   # # Python-related
   # - python=3.10
   # - ipykernel
@@ -35,4 +40,3 @@ dependencies:
   # 
   # # Bioconda tools
   # - celltypist
-

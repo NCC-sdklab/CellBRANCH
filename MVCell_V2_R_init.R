@@ -21,6 +21,19 @@ if (length(args) < 1) {
 h5ad_path <- normalizePath(args[1])
 if (!file.exists(h5ad_path)) stop("File not found: ", h5ad_path)
 
+benchmark.num = if (length(args) == 3) as.integer(args[3]) else NULL
+
+# setting parameters. adding benchmark numbers for control
+out_dir  <- dirname(h5ad_path)
+out_base <- tools::file_path_sans_ext(basename(h5ad_path))
+
+if (is.null(benchmark.num)) {
+  out_rds  <- file.path(out_dir, paste0(out_base, "_sce.rds"))
+} else {
+  out_rds  <- file.path(out_dir, paste0(out_base, "_", benchmark.num, "_sce.rds"))
+}
+
+# ---- setting cores ----
 available_cores <- parallel::detectCores(logical = TRUE)
 ncore <- if (length(args) >= 2) as.integer(args[2]) else 0
 if (is.na(ncore) || ncore < 0) ncore <- 0
@@ -89,10 +102,6 @@ if (!("logcounts" %in% assayNames(sce))) {
   message("'logcounts' assay already present.")
 }
 
-# ---- Save ----
-out_dir  <- dirname(h5ad_path)
-out_base <- tools::file_path_sans_ext(basename(h5ad_path))
-out_rds  <- file.path(out_dir, paste0(out_base, "_sce.rds"))
 
 saveRDS(sce, file = out_rds)
 cat("Saved:", out_rds, "\n")

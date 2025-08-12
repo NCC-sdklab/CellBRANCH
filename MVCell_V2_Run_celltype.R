@@ -16,8 +16,6 @@ suppressPackageStartupMessages({
 set.seed(1)
 
 # ----- Helpers -----
-log_step <- function(fmt, ...) message(sprintf(fmt, ...))
-
 score.to.celltype <- function(celltype.score, top.rank = 3){
   # Safeguard when fewer rows than requested top.rank
   kmax <- pmin(top.rank, nrow(celltype.score))
@@ -60,8 +58,29 @@ h5ad_path <- normalizePath(args[1])
 h5ad_dir  <- dirname(h5ad_path)
 cat("H5AD file path:", h5ad_path, "\n")
 
-out_base <- tools::file_path_sans_ext(basename(h5ad_path))
-out_rds  <- file.path(h5ad_dir, paste0(out_base, "_sce.rds"))
+benchmark.num = if (length(args) == 3) as.integer(args[3]) else NULL
+
+# setting parameters. adding benchmark numbers for control
+#paths
+out_dir  <- dirname(h5ad_path)
+celltype.dir <- file.path(h5ad_dir, "celltype_annotate")
+if (!dir.exists(celltype.dir)) dir.create(celltype.dir)
+
+#filename base
+out.base <- tools::file_path_sans_ext(basename(h5ad_path))
+if (!is.null(benchmark.num)) {
+  out.base <- paste0(out.base, "_", benchmark.num)
+} else {
+  out.base <- out.base
+}
+
+#names
+out_rds  <- file.path(out_dir, paste0(out.base, "_sce.rds"))
+out.sr = file.path(celltype.dir, paste0(out.base, "_singleR_result.rds"))
+out.sc = file.path(celltype.dir, paste0(out.base, "_sctype_result.rds"))
+out.sca = file.path(celltype.dir, paste0(out.base, "_scatomic_result.rds"))
+out_csv <- file.path(celltype.dir, paste0(out.base, "_MVCell_annotate.csv"))
+
 
 available_cores <- parallel::detectCores(logical = TRUE)
 ncore <- suppressWarnings(as.integer(if (length(args) >= 2) args[2] else NA))
@@ -74,10 +93,10 @@ if (.Platform$OS.type == "windows") {
   BPPARAM <- BiocParallel::MulticoreParam(workers = ncore)
 }
 BiocParallel::register(BPPARAM)
-log_step("Using %d cores (of %d available)", ncore, available_cores)
+message(sprintf("Using %d cores (of %d available)", ncore, available_cores))
 
 # ----- Load preprocessed SCE from Part 1 -----
-if (!file.exists(sce_rds)) stop("Missing preprocessed RDS: ", out_rds)
+if (!file.exists(out_rds)) stop("Missing preprocessed RDS: ", out_rds)
 sce <- readRDS(out_rds)
 
 # ----- ScType sources / DB -----
@@ -105,95 +124,120 @@ try({
 }, silent = TRUE)
 
 if (!ok_env) {
-  log_step("Note: couldn't auto-select conda env for reticulate. If scATOMIC needs Python deps, set RETICULATE_PYTHON or use_condaenv manually.")
+  message("Note: couldn't auto-select conda env for reticulate. If scATOMIC needs Python deps, set RETICULATE_PYTHON or use_condaenv manually.")
 }
 
-library(scATOMIC)
+suppressPackageStartupMessages({
+  library(scATOMIC)
+})
+
 
 # =====================
 # 1) SingleR (BlueprintEncode)
 # =====================
-log_step("Running SingleR with BlueprintEncodeData()...")
-ref.data <- celldex::BlueprintEncodeData()
+#checking first
+if (file.exists(out.sr)) {
+  message("Previous singleR run found. Loading...")
+  singleR.res = readRDS(out.sr)
+} else {
+  message("Running SingleR with BlueprintEncodeData()...")
+  ref.data <- celldex::BlueprintEncodeData()
+  
+  singleR.res <- SingleR(
+    test   = sce,
+    ref    = ref.data,
+    labels = ref.data[["label.main"]],
+    BPPARAM = BPPARAM
+  )
+  saveRDS(singleR.res, file = out.sr)
+}
 
-singleR.res <- SingleR(
-  test   = sce,
-  ref    = ref.data,
-  labels = ref.data[["label.main"]],
-  BPPARAM = BPPARAM
-)
 score.output <- singleR.res$scores
 rownames(score.output) <- rownames(singleR.res)
 singleR.df <- t(score.output)
-log_step("SingleR finished.")
+message("SingleR finished.")
 
 # =====================
 # 2) ScType
 # =====================
-log_step("Running ScType with default reference DB...")
-sc_db_df <- openxlsx::read.xlsx(sc_db)
-# Restrict to lung cell types by default; adjust if needed
-gs.list <- gene_sets_prepare(path_to_db_file = sc_db, cell_type = "Lung")
-
-sctype.df <- sctype_score(
-  scRNAseqData = assay(sce, "logcounts"),
-  scaled = FALSE,
-  gs  = gs.list$gs_positive,
-  gs2 = gs.list$gs_negative
-)
-log_step("ScType finished.")
+if (file.exists(out.sc)) {
+  message("Previous ScType run found. Loading...")
+  sctype.df = readRDS(out.sc)
+} else {
+  message("Running ScType with default reference DB...")
+  sc_db_df <- openxlsx::read.xlsx(sc_db)
+  # Restrict to lung cell types by default; adjust if needed
+  gs.list <- gene_sets_prepare(path_to_db_file = sc_db, cell_type = "Lung")
+  
+  sctype.df <- sctype_score(
+    scRNAseqData = assay(sce, "logcounts"),
+    scaled = FALSE,
+    gs  = gs.list$gs_positive,
+    gs2 = gs.list$gs_negative)
+  
+  saveRDS(sctype.df, file = out.sc)
+}
+message("ScType finished.")
 
 # =====================
 # 3) scATOMIC
 # =====================
-log_step("Running scATOMIC (this may take a while)...")
-count.mat <- assay(sce, "counts")
-# filter zero rows with DelayedMatrix-aware function if available
-if (inherits(count.mat, "DelayedMatrix") && requireNamespace("DelayedMatrixStats", quietly = TRUE)) {
-  keep <- DelayedMatrixStats::rowSums2(count.mat) > 0
+message("Running scATOMIC (this may take a while)...")
+if (file.exists(out.sca)) {
+  message("Previous scATOMIC run found. Loading...")
+  scatomic.df = readRDS(out.sca)
 } else {
-  keep <- rowSums(as.matrix(count.mat)) > 0
-}
-count.mat <- count.mat[keep, , drop = FALSE]
-
-cell.limit <- 30000
-n.core.scatomic <- 1  # keep at 1 to avoid freezing; consider exposing as a flag
-
-if (ncol(count.mat) > cell.limit) {
-  log_step("Dataset too large. Splitting into chunks of ~%d cells.", cell.limit)
-  num_groups <- ceiling(ncol(count.mat) / cell.limit)
-  barcodes <- colnames(count.mat)
-  set.seed(1)
-  barcodes <- sample(barcodes)
-  group_indices <- cut(seq_along(barcodes), breaks = num_groups, labels = FALSE)
-  barcode_groups <- split(barcodes, group_indices)
+  count.mat <- assay(sce, "counts")
+  # filter zero rows with DelayedMatrix-aware function if available
+  if (inherits(count.mat, "DelayedMatrix") && requireNamespace("DelayedMatrixStats", quietly = TRUE)) {
+    keep <- DelayedMatrixStats::rowSums2(count.mat) > 0
+  } else {
+    keep <- rowSums(as.matrix(count.mat)) > 0
+  }
+  count.mat <- count.mat[keep, , drop = FALSE]
   
-  query.barc <- barcode_groups[[1]]
-  query.count <- count.mat[, query.barc]
-  cell.pred <- run_scATOMIC(rna_counts = query.count, mc.cores = n.core.scatomic)
-  scatomic.df <- create_summary_matrix(
-    prediction_list = cell.pred, use_CNVs = FALSE, modify_results = TRUE,
-    mc.cores = n.core.scatomic, raw_counts = query.count, min_prop = 0.5
-  )
+  cell.limit <- 30000
+  n.core.scatomic <- 1  # keep at 1 to avoid freezing; consider exposing as a flag
   
-  for (i in 2:length(barcode_groups)) {
-    log_step("scATOMIC chunk %d / %d", i, length(barcode_groups))
-    query.barc <- barcode_groups[[i]]
+  if (ncol(count.mat) > cell.limit) {
+    message(sprintf("Dataset too large. Splitting into chunks of ~%d cells.", cell.limit))
+    num_groups <- ceiling(ncol(count.mat) / cell.limit)
+    barcodes <- colnames(count.mat)
+    set.seed(1)
+    barcodes <- sample(barcodes)
+    group_indices <- cut(seq_along(barcodes), breaks = num_groups, labels = FALSE)
+    barcode_groups <- split(barcodes, group_indices)
+    
+    query.barc <- barcode_groups[[1]]
     query.count <- count.mat[, query.barc]
     cell.pred <- run_scATOMIC(rna_counts = query.count, mc.cores = n.core.scatomic)
-    query_results_sca <- create_summary_matrix(
+    scatomic.df <- create_summary_matrix(
       prediction_list = cell.pred, use_CNVs = FALSE, modify_results = TRUE,
       mc.cores = n.core.scatomic, raw_counts = query.count, min_prop = 0.5
     )
-    scatomic.df <- rbind(scatomic.df, query_results_sca)
+    
+    for (i in 2:length(barcode_groups)) {
+      message(sprintf("scATOMIC chunk %d / %d", i, length(barcode_groups)))
+      query.barc <- barcode_groups[[i]]
+      query.count <- count.mat[, query.barc]
+      cell.pred <- run_scATOMIC(rna_counts = query.count, mc.cores = n.core.scatomic)
+      query_results_sca <- create_summary_matrix(
+        prediction_list = cell.pred, use_CNVs = FALSE, modify_results = TRUE,
+        mc.cores = n.core.scatomic, raw_counts = query.count, min_prop = 0.5
+      )
+      scatomic.df <- rbind(scatomic.df, query_results_sca)
+    }
+  } else {
+    cell.pred <- run_scATOMIC(rna_counts = count.mat, mc.cores = n.core.scatomic)
+    scatomic.df <- create_summary_matrix(
+      prediction_list = cell.pred, use_CNVs = FALSE, modify_results = TRUE,
+      mc.cores = n.core.scatomic, raw_counts = count.mat, min_prop = 0.5
+    )
   }
-} else {
-  cell.pred <- run_scATOMIC(rna_counts = count.mat, mc.cores = n.core.scatomic)
-  scatomic.df <- create_summary_matrix(
-    prediction_list = cell.pred, use_CNVs = FALSE, modify_results = TRUE,
-    mc.cores = n.core.scatomic, raw_counts = count.mat, min_prop = 0.5
-  )
+  saveRDS(scatomic.df, file = out.sca)
 }
+
+
 
 # =====================
 # Combine results
@@ -205,7 +249,7 @@ sctype.score <- score.to.celltype(sctype.df)
 
 # Check shared columns (cells)
 if (!identical(colnames(sctype.df), colnames(singleR.df))) {
-  log_step("ERROR: barcode mismatch between ScType and SingleR.")
+  message("ERROR: barcode mismatch between ScType and SingleR.")
   stop("Barcode mismatch between ScType and SingleR.")
 }
 
@@ -230,7 +274,7 @@ scatomic.pred  <- scatomic.pred[,  target_cols, drop = FALSE]
 scatomic.score <- scatomic.score[, target_cols, drop = FALSE]
 
 if (!identical(colnames(sctype.df), colnames(scatomic.pred))) {
-  log_step("ERROR: barcode mismatch between ScType and scATOMIC.")
+  message("ERROR: barcode mismatch between ScType and scATOMIC.")
   stop("Barcode mismatch between ScType and scATOMIC.")
 }
 
@@ -251,11 +295,7 @@ for (j in seq_along(celltype.list)) {
 
 output.df$barcode <- colnames(sctype.df)
 
-celltype.dir <- file.path(h5ad_dir, "celltype_annotate")
-if (!dir.exists(celltype.dir)) dir.create(celltype.dir)
 
-out_csv <- file.path(celltype.dir, "MVCell_annotate_per_cell_v1.csv")
 write.table(output.df, file = out_csv, quote = FALSE, row.names = FALSE, sep = ",")
 
-log_step("Saved per-cell annotations to: %s", out_csv)
-log_step("Summary: %d cells, methods = %s", ncol(sce), paste(names(celltype.list), collapse = ", "))
+message(sprintf("Saved per-cell annotations to: %s", out_csv))
