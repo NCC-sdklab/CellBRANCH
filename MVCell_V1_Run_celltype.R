@@ -60,6 +60,9 @@ h5ad_path <- normalizePath(args[1])
 h5ad_dir  <- dirname(h5ad_path)
 cat("H5AD file path:", h5ad_path, "\n")
 
+out_base <- tools::file_path_sans_ext(basename(h5ad_path))
+out_rds  <- file.path(h5ad_dir, paste0(out_base, "_sce.rds"))
+
 available_cores <- parallel::detectCores(logical = TRUE)
 ncore <- suppressWarnings(as.integer(if (length(args) >= 2) args[2] else NA))
 if (is.na(ncore) || ncore < 1) ncore <- available_cores - 2
@@ -74,9 +77,8 @@ BiocParallel::register(BPPARAM)
 log_step("Using %d cores (of %d available)", ncore, available_cores)
 
 # ----- Load preprocessed SCE from Part 1 -----
-sce_rds <- file.path(h5ad_dir, "sce_temp.rds")
-if (!file.exists(sce_rds)) stop("Missing preprocessed RDS: ", sce_rds)
-sce <- readRDS(sce_rds)
+if (!file.exists(sce_rds)) stop("Missing preprocessed RDS: ", out_rds)
+sce <- readRDS(out_rds)
 
 # ----- ScType sources / DB -----
 sctype_base <- Sys.getenv("MVCell_SCTYPE_DIR", unset = script.dir)
@@ -98,7 +100,7 @@ try({
   if (dir.exists(ret.path)) { 
     reticulate::use_condaenv(ret.path, required = TRUE)
     ok_env <- TRUE
-    message("✅ Successfully activated conda environment: r-reticulate-mvcell")
+    message("Successfully activated conda environment: r-reticulate-mvcell")
   }
 }, silent = TRUE)
 
