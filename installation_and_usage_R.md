@@ -1,0 +1,94 @@
+# MVCell
+Automatic Cell Type Annotation for Single-Cell RNA Data
+
+## 1. Overview
+MVCell provides a unified environment to run three R-based cell type annotation algorithms for single-cell RNA sequencing (scRNA-seq) data:
+
+- **SingleR**
+- **ScType**
+- **scATOMIC**
+
+These scripts are designed for reproducibility: package versions are fixed to ensure stability. 
+The installation process has been tested on Linux-based systems. Other operating systems may require additional adjustments.
+
+
+---
+**🔹 Quick Facts**
+- **Tested R version**: 4.4 (specified in `MVCell_R_env.yaml`).
+- **Environment files**:  
+  - `MVCell_R_env.yaml` – R + system dependencies for SingleR, ScType.  
+  - `r-reticulate-mvcell_env.yaml` – Python dependencies for scATOMIC (via `reticulate`).
+- **Input format**: `.h5ad` containing a **count matrix** (mandatory).  
+  - Optionally: `logcounts` if you prefer your own log-normalization.  
+  - Gene and cell metadata are **not used**.
+- **References**: SingleR uses **Blueprint Encode Data**; ScType and scATOMIC use **default databases and parameters**.
+- **Parallelization**:  
+  - `[ncore]` argument controls cores for SingleR and ScType.  
+  - scATOMIC is **always 1 core** for stability.  
+  - Datasets >30,000 cells are automatically split for scATOMIC during imputation — no manual action required.
+- **Reproducibility**: `sessionInfo()` is saved in the results directory after each run.
+
+---
+## 2. Requirements
+- Linux-based system (tested on Ubuntu and CentOS)
+- Conda or Mamba package manager
+- R (version 4.4)
+- Internet connection for package installation
+
+## 3. Installation
+
+1. **Clone the repository**  
+```bash
+git clone <git@github.com:NCC-sdklab/MVCell.git>
+cd MVCell
+```
+
+2. **Create the conda environments**  
+Two environments are prepared: `MVCell_R` for providing R environment, and `r-reticulate-mvcell` for imputation required for scATOMIC
+```bash
+cd r-install
+mamba env create -f MVCell_R_env.yml
+mamba env create -f r-reticulate-mvcell_env.yml
+conda activate MVCell_R
+```
+
+3. **Install R dependencies using `pak`**  
+R-based script is prepared for consistent package management.
+```r
+Rscript MVCell_R_install_v2.R
+```
+
+## 4. Usage
+
+### Step 1 — Preprocessing  
+Run the first script to preprocess the `.h5ad` file into an R-compatible format:
+```bash
+Rscript script_part1.R /path/to/input.h5ad [num_cores] [benchmark_id]
+```
+
+- `num_cores` *(optional)*: Number of CPU cores to use (default: all available minus 2)  
+- `benchmark_id` *(optional)*: Identifier for benchmark tracking
+
+### Step 2 — Annotation  
+Run the second script to perform cell type annotation using all three algorithms:
+```bash
+Rscript script_part2.R /path/to/input.h5ad [num_cores] [benchmark_id]
+```
+
+### Step 3 — Output  
+Results are saved as:
+- Processed `.rds` file
+- Per-method annotation results in `celltype_annotate/`
+- Combined annotation CSV file
+
+## 5. Notes
+- Fixed package versions ensure stability but may not reflect upstream updates.
+- `scATOMIC` requires both R and Python dependencies; the provided environment file includes these.
+- The scripts automatically skip rerunning a method if previous results are found.
+
+## 6. Troubleshooting
+- If package installation fails, verify your network connection and that the CRAN and Bioconductor mirrors are accessible.
+- For `scATOMIC` Python issues, ensure the correct conda environment is activated or set `RETICULATE_PYTHON`.
+
+---
+*Last updated: 2025-08-12*
