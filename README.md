@@ -76,11 +76,10 @@ conda activate MVCell_R
 Rscript MVCell_R_install.R
 ```
 
-### 4. Install MVCell python
-
-## Install package
+### 4. Install MVCell python packages
 
 ```
+cd ../    # move the directory at MVCell
 pip install -e .
 ```
 
