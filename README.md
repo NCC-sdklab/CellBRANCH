@@ -132,8 +132,8 @@ This script will:
 - Save a combined annotation report compatible with MVCell
 
 ```bash
-conda activate MVCell_base
-Rscript MVCell_V2_Run_celltype.R path/to/input_file.h5ad 8
+conda activate MVCell_R
+Rscript MVCell_V2_Run_celltype.R "path/to/input_file.h5ad" 8
 ```
 
 ---
