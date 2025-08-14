@@ -73,7 +73,7 @@ Activate the **`MVCell_R`** environment and run the R install script:
 ```bash
 #cd r-install
 conda activate MVCell_R
-Rscript MVCell_R_install.R
+Rscript MVCell_R_install_v2.R
 ```
 
 ### 4. Install MVCell python packages
