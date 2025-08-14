@@ -112,10 +112,10 @@ Run the `MVCell_V1_R_init.R` script to:
 
 ```bash
 conda activate MVCell_R
-Rscript MVCell_V1_R_init.R path/to/input_file.h5ad 8
+Rscript MVCell_V1_R_init.R "path/to/input_file.h5ad" 8
 ```
 
-> The output `.rds` file will contain the processed SCE object for downstream annotation.
+> The output `.rds` file will contain the processed SCE object for downstream annotation and will create at input path
 
 ---
 
