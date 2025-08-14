@@ -9,22 +9,18 @@ description = "Bidirectional Hierarchical Transformer for Cell Type Annotation"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [{ name = "Seok-Won Jang", email = "seokwon@ncc.re.kr" }]
-# 의존성은 requirements.txt에서 읽도록 설정
 dynamic = ["dependencies"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools]
-# 최상위 .py 파일들을 모듈로 설치합니다.
-# ⚠️ 실제 파일명이 'config.py'인지 'configs.py'인지 확인하고 하나만 남기세요.
 py-modules = [
   "model",
   "utils",
   "train",
   "predict",
   "configs"   
-  # 필요하면 아래 두 개도 추가(파일명이 정확히 있을 때만)
   # "transform_celltype_as_hlca",
   # "cellytpist_scimilarity_merged"
 ]
