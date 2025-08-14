@@ -119,7 +119,7 @@ Rscript MVCell_V2_R_init.R "path/to/input_file.h5ad" 8
 
 ---
 
-### **Step 2 — Run Cell Type Annotation**
+### **Step 2 — Run Cell Type Annotation in R**
 
 Run the `MVCell_V1_Run_celltype.R` script to execute all three annotation methods:
 - **ScType**
@@ -134,6 +134,21 @@ This script will:
 ```bash
 conda activate MVCell_R
 Rscript MVCell_V2_Run_celltype.R "path/to/input_file.h5ad" 8
+```
+
+### **Step 3 — Run Cell Type Annotation in python**
+
+Run the `celltypist_scimilarity_merged.py` script to execute all two annotation methods:
+- **celltypist**
+- **SCimialrity**
+  
+This script will:
+- Read .h5ad file
+- Run each annotation algorithm
+- Save a combined annotation report with step2 output compatible with MVCell
+
+```bash
+python celltypist_scimilarity_merged.py "path/to/input_file.h5ad" 8 # will be added
 ```
 
 ---
