@@ -52,7 +52,7 @@ MVCell uses **three** conda environments:
 Create them from the provided YAML files:
 
 ```bash
-# Create MVCell_base
+# Create MVCell_R
 cd r-isntall
 conda env create -f MVCell_R_env.yaml   # or: mamba env create -f ...
 
