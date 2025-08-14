@@ -76,15 +76,10 @@ conda activate MVCell_R
 Rscript MVCell_R_install.R
 ```
 
-### 4. Install MVCell python (To be completed)
+### 4. Install MVCell python
 
-```
-### Install dependencies
-```
-pip install -r requirements.txt
-```
+## Install package
 
-### Install package
 ```
 pip install -e .
 ```
