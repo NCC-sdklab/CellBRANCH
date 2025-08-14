@@ -54,10 +54,10 @@ Create them from the provided YAML files:
 ```bash
 # Create MVCell_base
 cd r-isntall
-mamba env create -f MVCell_R_env.yaml   # or: conda env create -f ...
+conda env create -f MVCell_R_env.yaml   # or: mamba env create -f ...
 
 # Create r-reticulate
-mamba env create -f r-reticulate-mvcell_env.yaml
+conda env create -f r-reticulate-mvcell_env.yaml    # or: mamba env create -f ...
 ```
 
 > **Why two environments?**  
