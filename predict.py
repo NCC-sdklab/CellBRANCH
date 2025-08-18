@@ -89,17 +89,8 @@ def load_model_and_encoders(model_dir, device, ont_df):
     print(f"Loading model weights from {model_path}")
     checkpoint = torch.load(model_path, map_location=device)
     if any(key.startswith('_orig_mod.') for key in checkpoint.keys()):
-        # print("Detected torch.compile format, removing _orig_mod. prefix...")
-        print()
-    
-    new_checkpoint = {}
-    for key, value in checkpoint.items():
-        if key.startswith('_orig_mod.'):
-            new_key = key[10:]  
-            new_checkpoint[new_key] = value
-        else:
-            new_checkpoint[key] = value
-    checkpoint = new_checkpoint
+        # strip torch.compile prefix
+        checkpoint = { (k[10:] if k.startswith('_orig_mod.') else k): v for k, v in checkpoint.items() }
 
     model.load_state_dict(checkpoint)
     model.eval()
@@ -177,6 +168,53 @@ def print_prediction_summary(model_preds, total_cells, output_dir="./results"):
     
     return report_path
 
+def _read_table_auto(path: str) -> pd.DataFrame:            # NEW
+    # 탭/콤마 자동 판별
+    try:
+        return pd.read_csv(path, sep=None, engine="python")
+    except Exception:
+        # 마지막 폴백: 탭
+        return pd.read_csv(path, sep="\t")
+
+def _ensure_inputs(df: pd.DataFrame, tools: list[str]) -> pd.DataFrame:   # NEW
+    """
+    모델 입력에 필요한 컬럼(툴별 ann1~5, score)을 보장.
+    없으면 ann은 'Unknown', score는 0.0 으로 생성.
+    """
+    out = df.copy()
+    for t in tools:
+        for i in range(1, 6):
+            c = f"{t}_ann{i}"
+            if c not in out.columns:
+                out[c] = "Unknown"
+        s = f"{t}_score"
+        if s not in out.columns:
+            out[s] = 0.0
+    return out
+
+def _encode_inputs(df: pd.DataFrame, enc_in, tools: list[str]) -> pd.DataFrame:  # NEW
+    """
+    enc_in으로 툴별 ann1~5를 인덱스로 변환. Unknown 처리.
+    """
+    out = df.copy()
+    for t in tools:
+        for i in range(1, 6):
+            col = f"{t}_ann{i}"
+            out[col] = out[col].fillna("Unknown").astype(str)
+            try:
+                out[f"{col}_idx"] = enc_in[col].transform(out[col])
+            except ValueError:
+                # enc_in에 없는 범주는 Unknown으로 대체
+                classes = set(enc_in[col].classes_)
+                out[col] = out[col].apply(lambda x: x if x in classes else "Unknown")
+                out[f"{col}_idx"] = enc_in[col].transform(out[col])
+    # score 숫자화
+    for t in tools:
+        s = f"{t}_score"
+        out[s] = pd.to_numeric(out[s], errors="coerce").fillna(0.0)
+    return out
+
+    
 def main():
     args = parse_args()
     
@@ -203,49 +241,78 @@ def main():
     
     print(f"Input data: {df_eval.shape}")
     
+    has_gt = all(c in df_eval.columns for c in TARGET_COLS)
+    
     # Preprocess evaluation data
-    df_eval = preprocess_data(df_eval, SCORE_COLS, ANN_COLS, ANN_LEVEL)
+    # df_eval = preprocess_data(df_eval, SCORE_COLS, ANN_COLS, ANN_LEVEL)
     
     # Load model and encoders
     model, enc_in, enc_out, terminal_nodes_idx = load_model_and_encoders(
         args.model_dir, device, ont_df
     )
     
+    df_eval = _ensure_inputs(df_eval, TOOLS)
+    df_eval = _encode_inputs(df_eval, enc_in, TOOLS)
+
+    if has_gt:
+        for lvl in TARGET_COLS:
+            df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
+            try:
+                df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+            except ValueError:
+                classes = set(enc_out[lvl].classes_)
+                df_eval[lvl] = df_eval[lvl].apply(lambda x: x if x in classes else "Unknown")
+                df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+        y_dummy = df_eval[[f"{lvl}_idx" for lvl in TARGET_COLS]].to_numpy()
+    else:
+        y_dummy = np.zeros((len(df_eval), 5), dtype=int)
+
     # Encode evaluation data
     print("Encoding input data...")
-    for col in ANN_COLS:
-        df_eval[col] = df_eval[col].fillna("Unknown").astype(str)
-        # Transform with existing encoder
-        try:
-            df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
-        except ValueError as e:
-            print(f"Warning: Unknown category in {col}, setting to 'Unknown'")
-            # Handle unknown categories by setting them to 'Unknown'
-            df_eval[col] = df_eval[col].apply(
-                lambda x: x if x in enc_in[col].classes_ else "Unknown"
-            )
-            df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
+    # for col in ANN_COLS:
+    #     df_eval[col] = df_eval[col].fillna("Unknown").astype(str)
+    #     # Transform with existing encoder
+    #     try:
+    #         df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
+    #     except ValueError as e:
+    #         print(f"Warning: Unknown category in {col}, setting to 'Unknown'")
+    #         # Handle unknown categories by setting them to 'Unknown'
+    #         df_eval[col] = df_eval[col].apply(
+    #             lambda x: x if x in enc_in[col].classes_ else "Unknown"
+    #         )
+    #         df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
     
-    for lvl in TARGET_COLS:
-        df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
-        try:
-            df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
-        except ValueError as e:
-            print(f"Warning: Unknown category in {lvl}, setting to 'Unknown'")
-            df_eval[lvl] = df_eval[lvl].apply(
-                lambda x: x if x in enc_out[lvl].classes_ else "Unknown"
-            )
-            df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+    # for lvl in TARGET_COLS:
+    #     df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
+    #     try:
+    #         df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+    #     except ValueError as e:
+    #         print(f"Warning: Unknown category in {lvl}, setting to 'Unknown'")
+    #         df_eval[lvl] = df_eval[lvl].apply(
+    #             lambda x: x if x in enc_out[lvl].classes_ else "Unknown"
+    #         )
+    #         df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
     
         # Create dummy ground truth (not used, just for DataLoader compatibility)
-    dummy_y = np.zeros((len(df_eval), 5), dtype=int)
-    
+    if has_gt:
+        for lvl in TARGET_COLS:
+            df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
+            try:
+                df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+            except ValueError:
+                classes = set(enc_out[lvl].classes_)
+                df_eval[lvl] = df_eval[lvl].apply(lambda x: x if x in classes else "Unknown")
+                df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
+        y_dummy = df_eval[[f"{lvl}_idx" for lvl in TARGET_COLS]].to_numpy()
+    else:
+        y_dummy = np.zeros((len(df_eval), 5), dtype=int)
+
     # Prepare data
     feature_cols = [f"{c}_idx" for c in ANN_COLS] + SCORE_COLS
     eval_X = df_eval[feature_cols]
     
     # Create dataset and dataloader
-    eval_ds = MultiLevelDataset(eval_X, dummy_y, ANN_COLS, SCORE_COLS)
+    eval_ds = MultiLevelDataset(eval_X, y_dummy, ANN_COLS, SCORE_COLS)
     eval_loader = DataLoader(eval_ds, batch_size=args.batch_size, shuffle=False, 
                             num_workers=4, pin_memory=True if device.type == 'cuda' else False)
     
