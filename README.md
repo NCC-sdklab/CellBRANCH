@@ -105,7 +105,7 @@ To simplify this process, two R scripts and dedicated conda environments are pro
 
 ### **Step 1 — Convert `.h5ad` to `SingleCellExperiment` (SCE)**
 
-Run the `MVCell_V1_R_init.R` script to:
+Run the `MVCell_V2_R_init.R` script to:
 - Load the `.h5ad` file
 - Convert it to an `SingleCellExperiment` (SCE) object
 - Generate log-normalized counts (`logcounts`)
@@ -121,7 +121,7 @@ Rscript MVCell_V2_R_init.R "path/to/input_file.h5ad" 8
 
 ### **Step 2 — Run Cell Type Annotation in R**
 
-Run the `MVCell_V1_Run_celltype.R` script to execute all three annotation methods:
+Run the `MVCell_V2_Run_celltype.R` script to execute all three annotation methods:
 - **ScType**
 - **SingleR**
 - **scATOMIC**
