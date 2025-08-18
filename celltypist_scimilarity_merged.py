@@ -103,21 +103,17 @@ def merge_and_save_results(
     ct = celltypist_results.copy()
     if "barcode" not in ct.columns:
         raise KeyError("celltypist_results에 'barcode' 컬럼이 없습니다.")
+    
     ct_label_col = _pick_first(ct.columns, ["predicted_labels", "majority_voting", "cell_type"])
-    ct_score_col = _pick_first(ct.columns, ["confidence", "predicted_labels_score", "majority_voting_score", "predicted_proba"])
     if ct_label_col is None:
         raise KeyError(f"CellTypist 라벨 컬럼을 찾지 못했습니다. 존재 컬럼: {list(ct.columns)}")
-    if ct_score_col is None:
-        # 점수 없으면 NaN으로 채움
-        ct["celltypist_score"] = pd.NA
-        ct_df = ct[["barcode", ct_label_col, "celltypist_score"]].rename(
-            columns={ct_label_col: "celltypist_annot"}
-        )
-    else:
-        ct_df = ct[["barcode", ct_label_col, ct_score_col]].rename(
-            columns={ct_label_col: "celltypist_annot", ct_score_col: "celltypist_score"}
-        )
 
+    if "celltypist_score" not in ct.columns:
+        ct["celltypist_score"] = pd.NA
+
+    ct_df = ct[["barcode", ct_label_col, "celltypist_score"]].rename(
+        columns={ct_label_col: "celltypist_annot"})
+    
     # ---- SCimilarity 결과 컬럼 안전 매핑 ----
     scdf = scimilarity_results.copy()
     if "barcode" not in scdf.columns:
@@ -380,17 +376,18 @@ class CellTypistPipeline:
             barcode = _get_barcode_series(df)
             # 컬럼 매핑(라벨/스코어 안전 처리)
             label_col = _pick_first(df.columns, ["predicted_labels", "majority_voting", "cell_type"])
-            score_col = _pick_first(df.columns, ["confidence", "predicted_labels_score", "majority_voting_score", "predicted_proba"])
+            score_col = _pick_first(df.columns, ["conf_score","confidence", "predicted_labels_score", "majority_voting_score", "predicted_proba"])
             if label_col is None:
                 raise KeyError(f"CellTypist 결과 컬럼을 찾을 수 없습니다. 존재 컬럼: {list(df.columns)}")
 
             out = pd.DataFrame({
                 "barcode": barcode.values,
                 "predicted_labels": df[label_col].values,
-                "confidence": (df[score_col].values if score_col else pd.NA),
+                "celltypist_score": (df[score_col].values if score_col else pd.NA),
             })
+            print(out)
             
-            aggregated.append(out[["barcode", "predicted_labels", "confidence"]])
+            aggregated.append(out[["barcode", "predicted_labels", "celltypist_score"]])
 
         if not aggregated:
             raise ValueError("CellTypist: 수집된 결과가 없습니다(aggregated empty). h5ad 파일과 obs 컬럼을 확인하세요.")
