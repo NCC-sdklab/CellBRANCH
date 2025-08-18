@@ -137,6 +137,11 @@ def merge_and_save_results(
         )
 
     merged = db_df.merge(ct_df, on='barcode', how='left').merge(sc_df, on='barcode', how='left')
+    merged = merged.rename(columns={
+        "singleR_main_annot": "singleR_annot",
+        "singleR_main_score": "singleR_score",
+        })
+
     merged = merged[[c for c in merged.columns if c != 'barcode'] + ['barcode']]
     
     merged.to_csv(output_path, sep='\t', index=False)
