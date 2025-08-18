@@ -257,7 +257,7 @@ def main():
     )
 
     # 저장
-    write_table(df_out, out_path, args.out-sep)  # <-- typo 방지 위해 아래로 수정
+    write_table(df_out, out_path, args.out_sep)  # <-- typo 방지 위해 아래로 수정
 
 if __name__ == "__main__":
     try:
