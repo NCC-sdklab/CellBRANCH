@@ -87,6 +87,13 @@ Rscript MVCell_R_install_v2.R
 - **Step 5 (Python)**: Bidirectional Transformer prediction
 
 ```bash
+# Move to MVCell main folder
+cd ../
+
+# Give execute permission to run_all.sh
+chmod +x run_all.sh
+
+# Run pipeline
 ./run_all.sh \
   --h5ad /path/to/your_dataset.h5ad \
   --cores 16 \
