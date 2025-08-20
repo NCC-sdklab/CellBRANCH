@@ -73,6 +73,8 @@ conda activate MVCell
 Rscript MVCell_R_install_v2.R
 ```
 
+---
+
 ## Quick Start
 
 ### 1) Full pipeline with run_all.sh (recommended)
@@ -114,7 +116,6 @@ Rscript MVCell_R_install_v2.R
 
 SCimilarity model is cached under `./scimilarity/model_v1.1` (auto bootstrap on first run when using the default path).
 
----
 
 ### 2) Standalone Transformer Prediction (predict.py only)
 
