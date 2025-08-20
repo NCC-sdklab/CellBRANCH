@@ -45,9 +45,8 @@ cd MVCell
 
 MVCell uses three conda environments:
 
-- **MVCell_R** → R environment to run R-based celltype annotations (SingleR, sctype, scATOMIC)
+- **MVCell** → Main environment containing both R and Python for running all celltype annotations (SingleR, sctype, scATOMIC, celltypist, scimilarity)
 - **r-reticulate-mvcell** → Python environment for R's reticulate interface for scATOMIC
-- **MVCell_Python** → Main environment for MVCell + celltypist + scimilarity
 
 Create them from the provided YAML files:
 
@@ -73,8 +72,6 @@ conda activate MVCell
 Rscript MVCell_R_install_v2.R
 ```
 
----
-
 ## Quick Start
 
 ### 1) Full pipeline with run_all.sh (recommended)
@@ -88,6 +85,13 @@ Rscript MVCell_R_install_v2.R
 - **Step 5 (Python)**: Bidirectional Transformer prediction
 
 ```bash
+# Move to MVCell main folder
+cd ../
+
+# Give execute permission to run_all.sh
+chmod +x run_all.sh
+
+# Run pipeline
 ./run_all.sh \
   --h5ad /path/to/your_dataset.h5ad \
   --cores 16 \
@@ -155,12 +159,21 @@ data/
 - (If present) Tool levels: `{tool}_ann{1..5}`
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
 
+## Citation If you use this code in your research, please cite:
+```bibtex
+@article{bidirectional_transformer_2025,
+  title={Bidirectional Hierarchical Transformer for Cell Type Annotation},
+  author={Your Name},
+  journal={Journal Name},
+  year={2025}
+}
+```
+
 ## License
 
 MIT License — see LICENSE.
 
 ## Acknowledgments
 
-singleR, ScType, scATOMIC, SCimilarity, CellTypist
-
-Human Lung Cell Atlas (HLCA) ontology
+- Thanks to the developers of the cell type annotation tools: singleR, sctype, scATOMIC, scimilarity, and celltypist 
+- Human Lung Cell Atlas (HLCA) for providing the ontological framework
