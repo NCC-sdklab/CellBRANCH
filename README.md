@@ -45,9 +45,8 @@ cd MVCell
 
 MVCell uses three conda environments:
 
-- **MVCell_R** → R environment to run R-based celltype annotations (SingleR, sctype, scATOMIC)
+- **MVCell** → Main environment containing both R and Python for running all celltype annotations (SingleR, sctype, scATOMIC, celltypist, scimilarity)
 - **r-reticulate-mvcell** → Python environment for R's reticulate interface for scATOMIC
-- **MVCell_Python** → Main environment for MVCell + celltypist + scimilarity
 
 Create them from the provided YAML files:
 
