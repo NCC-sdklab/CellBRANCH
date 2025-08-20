@@ -114,13 +114,17 @@ def get_model_predictions(model, loader, device, enc_in, target_cols):
     
     return all_preds
 
-def save_prediction_results(model_preds, output_dir):
+def save_prediction_results(model_preds, output_dir,barcodes=None):
     """Save prediction results to CSV (predictions only)"""
     # Create predictions dataframe
     predictions_df = pd.DataFrame({
         f"{lvl}_prediction": model_preds[lvl] 
         for lvl in model_preds.keys()
     })
+    if barcodes is not None:
+        if len(barcodes) != len(predictions_df):
+            raise ValueError(f"Barcode length ({len(barcodes)}) does not match predictions ({len(predictions_df)})")
+        predictions_df.insert(0, "barcode", barcodes)
     
     # Save results 
     pred_path = os.path.join(output_dir, "cell_type_predictions.csv")
@@ -241,6 +245,8 @@ def main():
     
     print(f"Input data: {df_eval.shape}")
     
+    barcodes = df_eval["barcode"].astype(str).tolist()
+        
     has_gt = all(c in df_eval.columns for c in TARGET_COLS)
     
     # Preprocess evaluation data
@@ -269,31 +275,7 @@ def main():
 
     # Encode evaluation data
     print("Encoding input data...")
-    # for col in ANN_COLS:
-    #     df_eval[col] = df_eval[col].fillna("Unknown").astype(str)
-    #     # Transform with existing encoder
-    #     try:
-    #         df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
-    #     except ValueError as e:
-    #         print(f"Warning: Unknown category in {col}, setting to 'Unknown'")
-    #         # Handle unknown categories by setting them to 'Unknown'
-    #         df_eval[col] = df_eval[col].apply(
-    #             lambda x: x if x in enc_in[col].classes_ else "Unknown"
-    #         )
-    #         df_eval[f"{col}_idx"] = enc_in[col].transform(df_eval[col])
-    
-    # for lvl in TARGET_COLS:
-    #     df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
-    #     try:
-    #         df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
-    #     except ValueError as e:
-    #         print(f"Warning: Unknown category in {lvl}, setting to 'Unknown'")
-    #         df_eval[lvl] = df_eval[lvl].apply(
-    #             lambda x: x if x in enc_out[lvl].classes_ else "Unknown"
-    #         )
-    #         df_eval[f"{lvl}_idx"] = enc_out[lvl].transform(df_eval[lvl])
-    
-        # Create dummy ground truth (not used, just for DataLoader compatibility)
+
     if has_gt:
         for lvl in TARGET_COLS:
             df_eval[lvl] = df_eval[lvl].fillna("Unknown").astype(str)
@@ -327,7 +309,7 @@ def main():
     }
     
     # Save prediction results
-    pred_path, result_df = save_prediction_results(model_preds, output_dir)
+    pred_path, result_df = save_prediction_results(model_preds, output_dir, barcodes=barcodes)
     print(f"\n💾 Predictions saved to: {pred_path}")
     
     # Print prediction summary
