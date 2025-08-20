@@ -160,13 +160,14 @@ data/
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
 
 ## Citation If you use this code in your research, please cite:
-bibtex
+```bibtex
 @article{bidirectional_transformer_2025,
   title={Bidirectional Hierarchical Transformer for Cell Type Annotation},
   author={Your Name},
   journal={Journal Name},
   year={2025}
 }
+```
 
 ## License
 
