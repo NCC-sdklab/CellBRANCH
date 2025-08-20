@@ -186,7 +186,7 @@ python "${PY_STEP5}" \
   --output-dir "${PRED_OUTDIR}"
 
 echo ""
-echo "🎉 Done (NO-CHUNK)!"
+echo "🎉 Done !"
 echo " - Step2 CSV            : ${MERGED_CSV}"
 echo " - Step3 merged TSV     : ${STEP3_OUT}"
 echo " - Step4 annlevel TSV   : ${STEP4_OUT}"
