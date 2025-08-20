@@ -1,4 +1,4 @@
-name: MVCell_R
+name: MVCell
 channels:
   - bioconda
   - conda-forge
