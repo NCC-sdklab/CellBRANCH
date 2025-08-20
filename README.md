@@ -174,6 +174,5 @@ MIT License — see LICENSE.
 
 ## Acknowledgments
 
-singleR, ScType, scATOMIC, SCimilarity, CellTypist
-
-Human Lung Cell Atlas (HLCA) ontology
+- Thanks to the developers of the cell type annotation tools: singleR, sctype, scATOMIC, scimilarity, and celltypist 
+- Human Lung Cell Atlas (HLCA) for providing the ontological framework
