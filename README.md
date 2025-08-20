@@ -114,6 +114,8 @@ Rscript MVCell_R_install_v2.R
 
 SCimilarity model is cached under `./scimilarity/model_v1.1` (auto bootstrap on first run when using the default path).
 
+---
+
 ### 2) Standalone Transformer Prediction (predict.py only)
 
 Run transformer inference directly on HLCA-transferred TSV (e.g., merged_annlevel_transfered.tsv):
