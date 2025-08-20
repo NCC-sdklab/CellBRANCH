@@ -35,7 +35,6 @@ TRANSF_MODEL_DIR="${REPO_ROOT}/pretrained_model/"
 CELLTYP_MODEL="Cells_Lung_Airway.pkl"     # (Step3 내부에서도 강제 사용)
 CORES="$(($(nproc) - 2))"
 OUTDIR=""
-CONFIG="${REPO_ROOT}/mvcell_parameter.csv" # Step3에서 필요하면 사용
 
 usage() {
   cat <<EOF
@@ -52,7 +51,6 @@ Options:
   --mapping-dir DIR           Mapping DB dir for transform (default: ${MAPPING_DIR})
   --ontology CSV              Ontology CSV for prediction (default: ${ONTOLOGY_CSV})
   --transformer-model DIR     Transformer model dir (default: ${TRANSF_MODEL_DIR})
-  --config FILE               Config CSV for Step3 (default: ${CONFIG})
   -h, --help                  Show this help
 
 Notes:
@@ -76,7 +74,6 @@ while [[ $# -gt 0 ]]; do
     --mapping-dir) MAPPING_DIR="$2"; shift 2 ;;
     --ontology) ONTOLOGY_CSV="$2"; shift 2 ;;
     --transformer-model) TRANSF_MODEL_DIR="$2"; shift 2 ;;
-    --config) CONFIG="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
@@ -159,8 +156,9 @@ MERGED_CSV="${CELLTYPE_DIR}/${BASENAME}_MVCell_annotate.csv"
 STEP3_OUT="${CELLTYPE_DIR}/merged_with_pipeline.tsv"
 echo "[Step3] CellTypist + SCimilarity + merge"
 python "${PY_STEP3}" "${MERGED_CSV}" "${STEP3_OUT}" \
-  --config "${CONFIG}" \
-  --scimilarity-model "${SCIMIL_MODEL}"
+  --scimilarity-model "${SCIMIL_MODEL}" \
+  --h5ad "${H5AD}" \
+  --celltypist-model "${CELLTYP_MODEL}"
 [[ -f "${STEP3_OUT}" ]] || { echo "ERROR: Step3 output not found: ${STEP3_OUT}"; exit 1; }
 
 # ------------------------------------------
@@ -193,4 +191,3 @@ echo " - Step2 CSV            : ${MERGED_CSV}"
 echo " - Step3 merged TSV     : ${STEP3_OUT}"
 echo " - Step4 annlevel TSV   : ${STEP4_OUT}"
 echo " - Step5 results dir    : ${PRED_OUTDIR}"
-
