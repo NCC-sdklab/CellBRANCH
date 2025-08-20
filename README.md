@@ -72,8 +72,6 @@ conda activate MVCell
 Rscript MVCell_R_install_v2.R
 ```
 
----
-
 ## Quick Start
 
 ### 1) Full pipeline with run_all.sh (recommended)
