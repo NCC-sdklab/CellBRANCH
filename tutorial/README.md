@@ -74,7 +74,7 @@ This will produce:
 ### Option 2 — You already have the HLCA-transferred TSV (Step 4 done)
 **Input:** `celltype_annotate/merged_annlevel_transfered.tsv`
 
-Run only Step 5 (Transformer):
+Run only Step 5 (MVCell):
 ```bash
 # change dir to main repo directory
 
