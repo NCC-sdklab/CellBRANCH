@@ -47,7 +47,6 @@ Options:
   --cores N                   CPU cores for R steps (default: $(($(nproc)-2)))
   --outdir DIR                Output directory (default: same dir as --h5ad)
   --scimilarity-model DIR     SCimilarity model dir (default: ${DEFAULT_SCIMIL_MODEL})
-  --celltypist-model NAME     CellTypist pkl name (default: ${CELLTYP_MODEL})
   --mapping-dir DIR           Mapping DB dir for transform (default: ${MAPPING_DIR})
   --ontology CSV              Ontology CSV for prediction (default: ${ONTOLOGY_CSV})
   --transformer-model DIR     Transformer model dir (default: ${TRANSF_MODEL_DIR})
