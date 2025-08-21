@@ -58,7 +58,7 @@ h5ad_path <- normalizePath(args[1])
 h5ad_dir  <- dirname(h5ad_path)
 cat("H5AD file path:", h5ad_path, "\n")
 
-benchmark.num = if (length(args) == 3) as.integer(args[3]) else NULL
+benchmark.num = if (length(args) == 3) as.integer(args[3]) else NA
 
 # setting parameters. adding benchmark numbers for control
 #paths
@@ -68,7 +68,7 @@ if (!dir.exists(celltype.dir)) dir.create(celltype.dir)
 
 #filename base
 out.base <- tools::file_path_sans_ext(basename(h5ad_path))
-if (!is.null(benchmark.num)) {
+if (!is.na(benchmark.num)) {
   out.base <- paste0(out.base, "_", benchmark.num)
 } else {
   out.base <- out.base
@@ -82,10 +82,18 @@ out.sca = file.path(celltype.dir, paste0(out.base, "_scatomic_result.rds"))
 out_csv <- file.path(celltype.dir, paste0(out.base, "_MVCell_annotate.csv"))
 
 
+# ---- setting cores ----
 available_cores <- parallel::detectCores(logical = TRUE)
-ncore <- suppressWarnings(as.integer(if (length(args) >= 2) args[2] else NA))
-if (is.na(ncore) || ncore < 1) ncore <- available_cores - 2
-ncore <- max(1, min(ncore, max(1, available_cores - 2)))
+ncore <- if (length(args) >= 2) as.integer(args[2]) else 0
+if (is.na(ncore) || ncore < 0) ncore <- 0
+
+if (ncore == 0) {
+  # default is 4, but don't exceed available_cores - 2
+  ncore <- min(4L, max(1L, available_cores - 2L))
+}
+
+# final safety clamp
+ncore <- min(max(1L, ncore), max(1L, available_cores - 2L))
 
 if (.Platform$OS.type == "windows") {
   BPPARAM <- BiocParallel::SnowParam(workers = ncore)

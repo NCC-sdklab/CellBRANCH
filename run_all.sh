@@ -74,10 +74,14 @@ while [[ $# -gt 0 ]]; do
     --mapping-dir) MAPPING_DIR="$2"; shift 2 ;;
     --ontology) ONTOLOGY_CSV="$2"; shift 2 ;;
     --transformer-model) TRANSF_MODEL_DIR="$2"; shift 2 ;;
+    --benchmark-num) BENCH_NUM="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) echo "Unknown option: $1"; usage ;;
   esac
 done
+
+#adding benchmark sequences for testing. May be removed later
+BENCH_NUM="${BENCH_NUM:-NA}"
 
 [[ -z "${H5AD}" ]] && { echo "ERROR: --h5ad is required"; usage; }
 [[ -f "${H5AD}" ]] || { echo "ERROR: h5ad not found: ${H5AD}"; exit 1; }
@@ -129,14 +133,14 @@ mkdir -p "${CELLTYPE_DIR}"
 # Step 1: R preprocess  (.h5ad -> *_sce.rds)
 # ------------------------------------------
 echo "[Step1] R preprocess → SCE RDS"
-Rscript "${R_STEP1}" "${H5AD}" "${CORES}"
+Rscript "${R_STEP1}" "${H5AD}" "${CORES}" "${BENCH_NUM}"
 [[ -f "${SCE_RDS}" ]] || { echo "ERROR: Step1 output not found: ${SCE_RDS}"; exit 1; }
 
 # ------------------------------------------
 # Step 2: R annotate (SingleR/ScType/scATOMIC) — single run
 # ------------------------------------------
 echo "[Step2] R annotate"
-Rscript "${R_STEP2}" "${H5AD}" "${CORES}"
+Rscript "${R_STEP2}" "${H5AD}" "${CORES}" "${BENCH_NUM}"
 
 MERGED_CSV="${CELLTYPE_DIR}/${BASENAME}_MVCell_annotate.csv"
 [[ -f "${MERGED_CSV}" ]] || {
