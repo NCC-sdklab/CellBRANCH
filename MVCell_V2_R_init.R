@@ -37,8 +37,15 @@ if (is.null(benchmark.num)) {
 available_cores <- parallel::detectCores(logical = TRUE)
 ncore <- if (length(args) >= 2) as.integer(args[2]) else 0
 if (is.na(ncore) || ncore < 0) ncore <- 0
-if (ncore == 0) ncore <- max(1, available_cores - 2)
-ncore <- min(max(1, ncore), max(1, available_cores - 2))
+
+if (ncore == 0) {
+  # default is 4, but don't exceed available_cores - 2
+  ncore <- min(4L, max(1L, available_cores - 2L))
+}
+
+# final safety clamp
+ncore <- min(max(1L, ncore), max(1L, available_cores - 2L))
+
 
 # ---- Parallel backend ----
 if (.Platform$OS.type == "windows") {
@@ -51,9 +58,32 @@ BiocParallel::register(BPPARAM)
 cat("H5AD file:", h5ad_path, "\n")
 cat("Using", ncore, "cores (of", available_cores, "available)\n")
 
+
 # ---- Read H5AD ----
 # use_hdf5=TRUE keeps large matrices on disk; adjust to your environment
 sce <- readH5AD(h5ad_path)
+
+
+#checking first
+if (file.exists(out_rds)) {
+  message(out_rds, " already exists! Checking to make sure...")
+  sce.out <- readRDS(out_rds)
+  count.check <- "counts" %in% assayNames(sce.out)
+  log.check   <- "logcounts" %in% assayNames(sce.out)
+  dim.check   <- dim(sce) == dim(sce.out)
+  
+  if (count.check & log.check & dim.check) {
+    message("All checks out. Skipping pre-processing...")
+    quit(save = "no", status = 0)
+  } else {
+    message("Existing RDS failed checks. Rebuilding fresh from .h5ad...")
+    # fall through to code that rebuilds from h5ad
+  }
+} else {
+  message("No RDS found. Making it fresh from .h5ad...")
+  # fall through to code that rebuilds from h5ad
+}
+
 
 # ---- Ensure 'counts' assay ----
 if (!("counts" %in% assayNames(sce))) {
