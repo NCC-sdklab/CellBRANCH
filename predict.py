@@ -32,9 +32,6 @@ def parse_args():
     parser.add_argument('--test-file', type=str, 
                        default='test_data.tsv',
                        help='Test data file')
-    parser.add_argument('--train-file', type=str,
-                       default='training_data.tsv',
-                       help='Training data file (for validation split)')
     parser.add_argument('--ont-file', type=str,
                        default='HLCA_tree.csv',
                        help='Ontology file')
@@ -132,7 +129,7 @@ def save_prediction_results(model_preds, output_dir,barcodes=None):
     
     return pred_path, predictions_df
 
-def print_prediction_summary(model_preds, total_cells, output_dir="./results"):
+def print_prediction_summary(model_preds, total_cells, output_dir):
     """Print summary of predictions and save report"""
     # Terminal output
     print(f"\n🎯 Prediction Results:")
@@ -313,7 +310,8 @@ def main():
     print(f"\n💾 Predictions saved to: {pred_path}")
     
     # Print prediction summary
-    print_prediction_summary(model_preds, len(df_eval))
+    args.output_dir = os.path.abspath(args.output_dir)
+    print_prediction_summary(model_preds, len(df_eval), args.output_dir)
     
     print(f"\n✅ Prediction completed. Results saved to {output_dir}")
 
