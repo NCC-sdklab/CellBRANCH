@@ -53,7 +53,6 @@ If you want a lighter demo, you can also start with `data/balanced_annL1_1500per
 ## B) Step 4 + 5 Only
 Use this when you already have outputs from Step 3 or Step 4.
 
-### Option 1 — Start from Step 3 output
 **Input:** `celltype_annotate/merged_with_pipeline.tsv`
 
 Run Step 4 (HLCA transfer) and Step 5 (Transformer) in one go:
@@ -71,24 +70,8 @@ This will produce:
 - `./merged_annlevel_transfered.tsv` — Step 4
 - `./step45_results/` — Step 5 inference artifacts
 
-### Option 2 — You already have the HLCA-transferred TSV (Step 4 done)
-**Input:** `celltype_annotate/merged_annlevel_transfered.tsv`
-
-Run only Step 5 (MVCell):
-```bash
-# change dir to main repo directory
-
-python predict.py \
-    --model-dir ./pretrained_model \
-    --data-dir ./data \
-    --test-file "path/to/your_HLCA-transferred file" \
-    --output-dir ./step5_results
-```
-
 ## Notes & Tips
 
-### Where does Step 4 live?
-We call the same script that `run_all.sh` uses for Step 4 internally. If your repository uses a different path/name, open `run_all.sh` and copy that path into `tutorial/run_step45.sh` → `STEP4_SCRIPT` variable.
 
 ### Large data
 Avoid committing `.h5ad` > 100 MiB to Git. Prefer Git LFS or release assets.
