@@ -61,26 +61,27 @@ Run Step 4 (HLCA transfer) and Step 5 (Transformer) in one go:
 # From repo root
 chmod +x tutorial/run_step45.sh
 tutorial/run_step45.sh \
-    --merged-tsv ./celltype_annotate/merged_with_pipeline.tsv \
-    --mapping-dir ./data/transform_db \
-    --ontology ./data/HLCA_tree.csv \
-    --model-dir ./pretrained_model \
+    --merged-tsv ../data/step45_tutorial_data_set.tsv \
+    --mapping-dir ../data/transform_db \
+    --model-dir ../pretrained_model \
     --outdir ./step45_results
 ```
 
 This will produce:
-- `./step45_results/merged_annlevel_transfered.tsv` — Step 4
-- `./step45_results/transformer/` — Step 5 inference artifacts
+- `./merged_annlevel_transfered.tsv` — Step 4
+- `./step45_results/` — Step 5 inference artifacts
 
 ### Option 2 — You already have the HLCA-transferred TSV (Step 4 done)
 **Input:** `celltype_annotate/merged_annlevel_transfered.tsv`
 
 Run only Step 5 (Transformer):
 ```bash
+# change dir to main repo directory
+
 python predict.py \
     --model-dir ./pretrained_model \
     --data-dir ./data \
-    --test-file ./celltype_annotate/merged_annlevel_transfered.tsv \
+    --test-file "path/to/your_HLCA-transferred file" \
     --output-dir ./step5_results
 ```
 
