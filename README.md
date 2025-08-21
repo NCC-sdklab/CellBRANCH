@@ -106,7 +106,6 @@ chmod +x run_all.sh
   
   When the default path is used, the model tarball is auto-downloaded & extracted at first run.
 
-- `--celltypist-model`: CellTypist model pkl (default: Cells_Lung_Airway.pkl)
 - `--mapping-dir`: mapping DB for HLCA transfer (default: ./data/transform_db)
 - `--ontology`: ontology CSV (default: ./data/HLCA_tree.csv)
 - `--transformer-model`: transformer model dir (default: ./pretrained_model/)
