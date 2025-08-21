@@ -67,8 +67,9 @@ tutorial/run_step45.sh \
 ```
 
 This will produce:
-- `./merged_annlevel_transfered.tsv` — Step 4
-- `./step45_results/` — Step 5 inference artifacts
+- `./merged_annlevel_transfered.tsv` — Step 4 result
+- `./step45_results/prediction_summary_report.txt` — The summary of step 5 result
+- `./step45_results/cell_type_predictions.csv` — Step 5 inference artifacts
 
 ## Notes & Tips
 
