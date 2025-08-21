@@ -21,13 +21,13 @@ if (length(args) < 1) {
 h5ad_path <- normalizePath(args[1])
 if (!file.exists(h5ad_path)) stop("File not found: ", h5ad_path)
 
-benchmark.num = if (length(args) == 3) as.integer(args[3]) else NULL
+benchmark.num = if (length(args) == 3) as.integer(args[3]) else NA
 
 # setting parameters. adding benchmark numbers for control
 out_dir  <- dirname(h5ad_path)
 out_base <- tools::file_path_sans_ext(basename(h5ad_path))
 
-if (is.null(benchmark.num)) {
+if (is.na(benchmark.num)) {
   out_rds  <- file.path(out_dir, paste0(out_base, "_sce.rds"))
 } else {
   out_rds  <- file.path(out_dir, paste0(out_base, "_", benchmark.num, "_sce.rds"))
@@ -67,21 +67,31 @@ sce <- readH5AD(h5ad_path)
 #checking first
 if (file.exists(out_rds)) {
   message(out_rds, " already exists! Checking to make sure...")
-  sce.out <- readRDS(out_rds)
-  count.check <- "counts" %in% assayNames(sce.out)
-  log.check   <- "logcounts" %in% assayNames(sce.out)
-  dim.check   <- dim(sce) == dim(sce.out)
   
-  if (count.check & log.check & dim.check) {
-    message("All checks out. Skipping pre-processing...")
-    quit(save = "no", status = 0)
+  sce.out <- tryCatch(readRDS(out_rds), error = function(e) {
+    message("Failed to read existing RDS: ", conditionMessage(e))
+    NULL
+  })
+  
+  if (!is.null(sce.out)) {
+    count.check <- "counts"    %in% SummarizedExperiment::assayNames(sce.out)
+    log.check   <- "logcounts" %in% SummarizedExperiment::assayNames(sce.out)
+    dim.check   <- identical(dim(sce), dim(sce.out))  # or: all(dim(sce) == dim(sce.out))
+    
+    if (isTRUE(count.check) && isTRUE(log.check) && isTRUE(dim.check)) {
+      message("All checks out. Skipping pre-processing...")
+      quit(save = "no", status = 0)
+    } else {
+      message("Existing RDS failed checks. Rebuilding fresh from .h5ad...")
+      # fall through
+    }
   } else {
-    message("Existing RDS failed checks. Rebuilding fresh from .h5ad...")
-    # fall through to code that rebuilds from h5ad
+    message("Existing RDS unreadable. Rebuilding fresh from .h5ad...")
+    # fall through
   }
 } else {
   message("No RDS found. Making it fresh from .h5ad...")
-  # fall through to code that rebuilds from h5ad
+  # fall through
 }
 
 

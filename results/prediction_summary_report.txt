@@ -1,42 +1,42 @@
 Cell Type Annotation Prediction Report
 ==================================================
-Total cells predicted: 257,795
+Total cells predicted: 8,452
 
 ann_level_1 predictions (Top 5):
 ------------------------------
-  Immune: 222,333 cells (86.2%)
-  Epithelial: 27,052 cells (10.5%)
-  Endothelial: 4,952 cells (1.9%)
-  Stroma: 3,458 cells (1.3%)
+  Epithelial: 6,373 cells (75.4%)
+  Stroma: 1,102 cells (13.0%)
+  Immune: 716 cells (8.5%)
+  Endothelial: 261 cells (3.1%)
 
 ann_level_2 predictions (Top 5):
 ------------------------------
-  Myeloid: 139,886 cells (54.3%)
-  Lymphoid: 82,430 cells (32.0%)
-  Airway epithelium: 14,071 cells (5.5%)
-  Alveolar epithelium: 12,876 cells (5.0%)
-  Blood vessels: 4,428 cells (1.7%)
+  Airway epithelium: 5,650 cells (66.8%)
+  Fibroblast lineage: 976 cells (11.5%)
+  Lymphoid: 661 cells (7.8%)
+  Alveolar epithelium: 660 cells (7.8%)
+  Blood vessels: 257 cells (3.0%)
 
 ann_level_3 predictions (Top 5):
 ------------------------------
-  Macrophages: 94,337 cells (36.6%)
-  T cell lineage: 61,047 cells (23.7%)
-  Monocytes: 34,499 cells (13.4%)
-  B cell lineage: 16,214 cells (6.3%)
-  AT2: 11,263 cells (4.4%)
+  Secretory: 4,038 cells (47.8%)
+  Fibroblasts: 926 cells (11.0%)
+  Basal: 823 cells (9.7%)
+  Multiciliated lineage: 778 cells (9.2%)
+  T cell lineage: 531 cells (6.3%)
 
 ann_level_4 predictions (Top 5):
 ------------------------------
-  Alveolar macrophages: 61,768 cells (24.0%)
-  CD8 T cells: 35,151 cells (13.6%)
-  Interstitial macrophages: 32,569 cells (12.6%)
-  Classical monocytes: 27,746 cells (10.8%)
-  CD4 T cells: 23,369 cells (9.1%)
+  Goblet: 3,746 cells (44.3%)
+  Multiciliated: 778 cells (9.2%)
+  Unknown: 576 cells (6.8%)
+  Suprabasal: 566 cells (6.7%)
+  CD8 T cells: 525 cells (6.2%)
 
 ann_level_5 predictions (Top 5):
 ------------------------------
-  Unknown: 149,559 cells (58.0%)
-  Alveolar Mph CCL3+: 52,661 cells (20.4%)
-  Monocyte-derived Mph: 28,706 cells (11.1%)
-  Alveolar Mph MT-positive: 5,248 cells (2.0%)
-  Goblet (nasal): 4,838 cells (1.9%)
+  Unknown: 3,628 cells (42.9%)
+  Goblet (bronchial): 2,910 cells (34.4%)
+  Goblet (nasal): 828 cells (9.8%)
+  Multiciliated (non-nasal): 777 cells (9.2%)
+  Club (nasal): 286 cells (3.4%)
