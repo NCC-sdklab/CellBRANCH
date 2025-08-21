@@ -3,7 +3,7 @@
 This folder contains two concise tutorials:
 
 - **A. Full Pipeline**: Run the entire MVCell pipeline from an `.h5ad` file.
-- **B. Step 4 + 5 only**: Run HLCA transfer (Step 4) and Transformer prediction (Step 5) only.
+- **B. Step 4 + 5 only**: Run HLCA transfer (Step 4) and MVCell prediction (Step 5) only.
 
 > We use the demo file you created:
 > - `tutorial_data_set.h5ad` — remove unknown label
