@@ -30,7 +30,7 @@ This will run the entire pipeline using `run_all.sh`.
 Place your `.h5ad` under a working directory, e.g.:
 ```
 data/
-└── balanced_noUnknown.h5ad
+└── tutorial_data_set.h5ad
 ```
 
 ### 2. Run
@@ -38,7 +38,7 @@ data/
 cd ./  # repo root (MVCell)
 chmod +x run_all.sh
 ./run_all.sh \
-    --h5ad ./data/balanced_noUnknown.h5ad \
+    --h5ad ./data/tutorial_data_set.h5ad \
     --cores 16
 ```
 
