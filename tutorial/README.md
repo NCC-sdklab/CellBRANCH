@@ -45,8 +45,8 @@ chmod +x run_all.sh
 ### 3. Outputs
 - `celltype_annotate/_MVCell_annotate.csv` — R tools (SingleR, ScType, scATOMIC) per-cell outputs
 - `celltype_annotate/merged_with_pipeline.tsv` — merged with CellTypist & SCimilarity
-- `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA ann_level_1..5 (Step 4 결과)
-- `mvcell_results/` — Transformer outputs (Step 5 결과)
+- `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA ann_level_1..5 (The result of Step 4)
+- `mvcell_results/` — Transformer outputs (The result of Step 5)
 
 If you want a lighter demo, you can also start with `data/balanced_annL1_1500perlabel.h5ad`.
 
