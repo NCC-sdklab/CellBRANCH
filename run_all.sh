@@ -2,7 +2,7 @@
 set -euo pipefail
 
 #############################################
-# MVCell full pipeline (NO CHUNK VERSION)
+# MVCell full pipeline 
 # - Step1: R preprocess (h5ad → *_sce.rds)
 # - Step2: R annotate (SingleR, ScType, scATOMIC)  [single run]
 # - Step3: python celltypist + scimilarity + merge
