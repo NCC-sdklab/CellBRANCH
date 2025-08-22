@@ -138,7 +138,7 @@ class CellTypistPipeline:
         df_reload["barcode"] = df_reload["barcode"].astype(str)
 
         out = df_reload[["barcode", "majority_voting", "conf_score"]].copy()
-        print(out)
+        # print(out)
         return out
 
 class SCimilarityPipeline:
@@ -232,7 +232,7 @@ def main():
 
     print("\n" + "="*60 + "\n1) CellTypist running\n" + "="*60)
     ct_df = ct_pipe.run(h5ad_file)
-    print(ct_df)
+    
     print("\n" + "="*60 + "\n2) SCimilarity running\n" + "="*60)
     sc_df = sc_pipe.run(h5ad_file)
 
