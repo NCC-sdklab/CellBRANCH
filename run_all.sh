@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+#JHL: 제가 멍청해서.
+# Ensure MVCell conda environment is active
+if [[ "$CONDA_DEFAULT_ENV" != "MVCell" ]]; then
+  echo "Error: Please activate the 'MVCell' conda environment first."
+  echo "Currently active: ${CONDA_DEFAULT_ENV:-none}"
+  exit 1
+fi
+
+
 #############################################
 # MVCell full pipeline 
 # - Step1: R preprocess (h5ad → *_sce.rds)

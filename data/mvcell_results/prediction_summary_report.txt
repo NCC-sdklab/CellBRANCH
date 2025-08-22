@@ -1,0 +1,42 @@
+Cell Type Annotation Prediction Report
+==================================================
+Total cells predicted: 6,000
+
+ann_level_1 predictions (Top 5):
+------------------------------
+  Epithelial: 2,899 cells (48.3%)
+  Stroma: 1,091 cells (18.2%)
+  Immune: 1,056 cells (17.6%)
+  Endothelial: 954 cells (15.9%)
+
+ann_level_2 predictions (Top 5):
+------------------------------
+  Airway epithelium: 2,846 cells (47.4%)
+  Fibroblast lineage: 857 cells (14.3%)
+  Blood vessels: 801 cells (13.4%)
+  Myeloid: 640 cells (10.7%)
+  Lymphoid: 416 cells (6.9%)
+
+ann_level_3 predictions (Top 5):
+------------------------------
+  Secretory: 2,531 cells (42.2%)
+  Fibroblasts: 764 cells (12.7%)
+  EC capillary: 570 cells (9.5%)
+  Macrophages: 499 cells (8.3%)
+  Multiciliated lineage: 293 cells (4.9%)
+
+ann_level_4 predictions (Top 5):
+------------------------------
+  Goblet: 2,368 cells (39.5%)
+  Unknown: 568 cells (9.5%)
+  Peribronchial fibroblasts: 499 cells (8.3%)
+  Alveolar macrophages: 454 cells (7.6%)
+  EC general capillary: 453 cells (7.5%)
+
+ann_level_5 predictions (Top 5):
+------------------------------
+  Unknown: 2,628 cells (43.8%)
+  Goblet (bronchial): 2,205 cells (36.8%)
+  Multiciliated (non-nasal): 292 cells (4.9%)
+  Alveolar Mph proliferating: 286 cells (4.8%)
+  Goblet (nasal): 161 cells (2.7%)

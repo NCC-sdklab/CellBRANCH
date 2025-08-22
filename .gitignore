@@ -1,3 +1,7 @@
 deprecated/
+data/celltype_annotate/
+data/mvcell_results/
 @eaDir/
 **/@eaDir/
+__pycache__
+r-install/

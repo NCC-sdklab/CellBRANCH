@@ -1,42 +1,42 @@
 Cell Type Annotation Prediction Report
 ==================================================
-Total cells predicted: 8,452
+Total cells predicted: 5,351
 
 ann_level_1 predictions (Top 5):
 ------------------------------
-  Epithelial: 6,373 cells (75.4%)
-  Stroma: 1,102 cells (13.0%)
-  Immune: 716 cells (8.5%)
-  Endothelial: 261 cells (3.1%)
+  Epithelial: 5,134 cells (95.9%)
+  Immune: 206 cells (3.8%)
+  Endothelial: 8 cells (0.1%)
+  Stroma: 3 cells (0.1%)
 
 ann_level_2 predictions (Top 5):
 ------------------------------
-  Airway epithelium: 5,650 cells (66.8%)
-  Fibroblast lineage: 976 cells (11.5%)
-  Lymphoid: 661 cells (7.8%)
-  Alveolar epithelium: 660 cells (7.8%)
-  Blood vessels: 257 cells (3.0%)
+  Airway epithelium: 4,941 cells (92.3%)
+  Lymphoid: 198 cells (3.7%)
+  Alveolar epithelium: 190 cells (3.6%)
+  Myeloid: 8 cells (0.1%)
+  Blood vessels: 8 cells (0.1%)
 
 ann_level_3 predictions (Top 5):
 ------------------------------
-  Secretory: 4,038 cells (47.8%)
-  Fibroblasts: 926 cells (11.0%)
-  Basal: 823 cells (9.7%)
-  Multiciliated lineage: 778 cells (9.2%)
-  T cell lineage: 531 cells (6.3%)
+  Secretory: 4,726 cells (88.3%)
+  AT2: 188 cells (3.5%)
+  T cell lineage: 180 cells (3.4%)
+  Multiciliated lineage: 173 cells (3.2%)
+  Basal: 39 cells (0.7%)
 
 ann_level_4 predictions (Top 5):
 ------------------------------
-  Goblet: 3,746 cells (44.3%)
-  Multiciliated: 778 cells (9.2%)
-  Unknown: 576 cells (6.8%)
-  Suprabasal: 566 cells (6.7%)
-  CD8 T cells: 525 cells (6.2%)
+  Goblet: 4,375 cells (81.8%)
+  Club: 350 cells (6.5%)
+  AT2 proliferating: 188 cells (3.5%)
+  Multiciliated: 173 cells (3.2%)
+  CD8 T cells: 167 cells (3.1%)
 
 ann_level_5 predictions (Top 5):
 ------------------------------
-  Unknown: 3,628 cells (42.9%)
-  Goblet (bronchial): 2,910 cells (34.4%)
-  Goblet (nasal): 828 cells (9.8%)
-  Multiciliated (non-nasal): 777 cells (9.2%)
-  Club (nasal): 286 cells (3.4%)
+  Goblet (bronchial): 2,325 cells (43.4%)
+  Goblet (nasal): 2,044 cells (38.2%)
+  Unknown: 439 cells (8.2%)
+  Club (nasal): 349 cells (6.5%)
+  Multiciliated (non-nasal): 173 cells (3.2%)
