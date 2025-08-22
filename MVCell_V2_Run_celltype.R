@@ -251,9 +251,13 @@ if (file.exists(out.sca)) {
 # Combine results
 # =====================
 # SingleR
-singleR.main.score <- score.to.celltype(singleR.df)
+#score transformation
+singleR.df.r = score.rank(singleR.df, log.n = T)
+sctype.df.r = score.rank(sctype.df, log.n = T)
+
+singleR.main.score <- score.to.celltype(singleR.df.r)
 # ScType
-sctype.score <- score.to.celltype(sctype.df)
+sctype.score <- score.to.celltype(sctype.df.r)
 
 # Check shared columns (cells)
 if (!identical(colnames(sctype.df), colnames(singleR.df))) {
