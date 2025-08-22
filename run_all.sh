@@ -121,7 +121,7 @@ if [[ "${SCIMIL_MODEL}" == "${DEFAULT_SCIMIL_MODEL}" ]]; then
   fi
 fi
 
-echo "========== MVCell Full Pipeline (NO-CHUNK) =========="
+echo "========== MVCell Full Pipeline =========="
 echo "Repo root          : ${REPO_ROOT}"
 echo "H5AD               : ${H5AD}"
 echo "Cores              : ${CORES}"

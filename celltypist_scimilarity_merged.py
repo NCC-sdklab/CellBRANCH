@@ -10,12 +10,13 @@ from celltypist import models
 from scimilarity.utils import lognorm_counts, align_dataset
 from scimilarity import CellAnnotation
 
-# ============== 공용 유틸 ==============
+# ============== utils ==============
 
 def _pick_first(cols: pd.Index, candidates: list[str]) -> str | None:
     return next((c for c in candidates if c in cols), None)
 
 def _get_barcode_series(df: pd.DataFrame) -> pd.Series:
+
     for col in ["barcode", "cell_name", "CellID", "cell", "cell_id"]:
         if col in df.columns:
             return df[col].astype(str).rename("barcode")
@@ -29,7 +30,18 @@ def _resolve_h5ad(args) -> Path:
         raise FileNotFoundError(f"--h5ad not found: {p}")
     return p.resolve()
 
-# ============== 병합 저장 ==============
+def _celltypist_cache_path(h5ad_file: Path, model_name: str, user_path: str | None) -> Path:
+    if user_path:
+        p = Path(user_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p.resolve()
+
+    stem = Path(model_name).stem  # e.g., "Cells_Lung_Airway"
+    out = h5ad_file.parent / f"celltypist_predictions_{stem}.xlsx"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    return out.resolve()
+
+# ============== save merged ==============
 
 def merge_and_save_results(
     tsv_path: str,
@@ -43,35 +55,21 @@ def merge_and_save_results(
         db_df = db_df.copy()
         db_df.insert(0, "barcode", b.values)
 
-    # CellTypist
+    # -------- CellTypist --------
     ct = celltypist_results.copy()
-    if "barcode" not in ct.columns:
-        raise KeyError("There are not 'barcode' in celltypist_results")
-    ct_label_col = _pick_first(ct.columns, ["predicted_labels", "majority_voting", "cell_type"])
-    ct_score_col = _pick_first(
-        ct.columns,
-        ["conf_score", "confidence", "predicted_labels_score", "majority_voting_score", "predicted_proba"]
+    # print(ct.columns)
+    ct_df = ct[["barcode", "majority_voting", "conf_score"]].rename(
+        columns={"majority_voting": "celltypist_annot", "conf_score": "celltypist_score"}
     )
-    if ct_label_col is None:
-        raise KeyError(f"MVCell does not find the label column of CellTypist. Exsting column : {list(ct.columns)}")
-    if ct_score_col is None:
-        ct["celltypist_score"] = pd.NA
-        ct_df = ct[["barcode", ct_label_col, "celltypist_score"]].rename(
-            columns={ct_label_col: "celltypist_annot"}
-        )
-    else:
-        ct_df = ct[["barcode", ct_label_col, ct_score_col]].rename(
-            columns={ct_label_col: "celltypist_annot", ct_score_col: "celltypist_score"}
-        )
 
-    # SCimilarity
+    # -------- SCimilarity --------
     scdf = scimilarity_results.copy()
     if "barcode" not in scdf.columns:
         raise KeyError("There are not 'barcode' in scimilarity_results")
     sc_label_col = _pick_first(scdf.columns, ["predictions_unconstrained", "prediction", "annot"])
     sc_score_col = _pick_first(scdf.columns, ["vsAll_weighted", "score", "conf"])
     if sc_label_col is None:
-        raise KeyError(f"MVCell does not find the label column of SCimilarity. Exsting column : {list(scdf.columns)}")
+        raise KeyError(f"MVCell does not find the label column of SCimilarity. Existing column : {list(scdf.columns)}")
     if sc_score_col is None:
         scdf["scimilarity_score"] = pd.NA
         sc_df = scdf[["barcode", sc_label_col, "scimilarity_score"]].rename(
@@ -95,9 +93,10 @@ def merge_and_save_results(
 # ============== pipelines ==============
 
 class CellTypistPipeline:
-    def __init__(self, forced_model: str | None = None):
+    def __init__(self, forced_model: str | None = None, cache_xlsx: str | None = None):
         self.model = None
         self.model_name = forced_model or "Cells_Lung_Airway.pkl"
+        self.cache_xlsx = cache_xlsx  
 
     def load_model(self):
         forced = self.model_name
@@ -120,22 +119,27 @@ class CellTypistPipeline:
         print(f"[CellTypist] {h5ad_file}")
         adata = sc.read(h5ad_file)
         adata = self._process(adata)
-        pred = celltypist.annotate(adata, model=self.model, majority_voting=True).to_adata()
-        df = pred.obs.copy()
-        barcode = _get_barcode_series(df)
-        label_col = _pick_first(df.columns, ["predicted_labels", "majority_voting", "cell_type"])
-        score_col = _pick_first(
-            df.columns,
-            ["conf_score", "confidence", "predicted_labels_score", "majority_voting_score", "predicted_proba"]
-        )
-        if label_col is None:
-            raise KeyError(f"CellTypist 결과 컬럼 누락: {list(df.columns)}")
-        out = pd.DataFrame({
-            "barcode": barcode.values,
-            "predicted_labels": df[label_col].values,
-            "celltypist_score": (df[score_col].values if score_col else pd.NA),
-        })
-        return out[["barcode", "predicted_labels", "celltypist_score"]]
+
+        # 1) prediction
+        res = celltypist.annotate(adata, model=self.model, majority_voting=True)
+        pred = res.to_adata()
+
+        # 2) obs to excel
+
+        cache_path = _celltypist_cache_path(h5ad_file, self.model_name, self.cache_xlsx)
+        pred.obs.to_excel(cache_path)
+        print(f"[CellTypist] saved obs to Excel: {cache_path}")
+
+        # 3) reload excel
+        df_reload = pd.read_excel(cache_path)
+
+        # rename cell_name to barcode
+        df_reload = df_reload.rename(columns={"cell_name": "barcode"})
+        df_reload["barcode"] = df_reload["barcode"].astype(str)
+
+        out = df_reload[["barcode", "majority_voting", "conf_score"]].copy()
+        # print(out)
+        return out
 
 class SCimilarityPipeline:
     def __init__(self, model_path: str):
@@ -171,7 +175,7 @@ class SCimilarityPipeline:
         label_col = _pick_first(df.columns, ["predictions_unconstrained", "prediction", "annot"])
         score_col = _pick_first(df.columns, ["vsAll_weighted", "score", "conf"])
         if label_col is None:
-            raise KeyError(f"SCimilarity 결과 컬럼 누락: {list(df.columns)}")
+            raise KeyError(f"Omitted SCimilarity results column: {list(df.columns)}")
         out = pd.DataFrame({
             "barcode": barcode.values,
             "predictions_unconstrained": df[label_col].values,
@@ -179,7 +183,7 @@ class SCimilarityPipeline:
         })
         return out[["barcode", "predictions_unconstrained", "vsAll_weighted"]]
 
-# ============== 메인 ==============
+# ============== main ==============
 
 def parse_args():
     repo = Path(__file__).resolve().parent
@@ -192,14 +196,18 @@ def parse_args():
     p.add_argument("output_tsv_path", nargs="?", default=None,
                    help="Output TSV (default: merged_with_pipeline.tsv next to input)")
     p.add_argument("-m", "--scimilarity-model", default=default_scim_path,
-                   help=f"SCimilarity 모델 디렉터리 (기본: {default_scim_path})")
+                   help=f"SCimilarity model path (default: {default_scim_path})")
 
-    # ✅ 반드시 하나 지정
-    p.add_argument("--h5ad", required=True, help="분석에 사용할 .h5ad 파일 경로(단일)")
+    p.add_argument("--h5ad", required=True, help="using for analysis .h5ad file path (uni)")
 
-    # ✅ CellTypist 모델 선택(기본은 Lung Airway)
+    # ✅ CellTypist model selection(defalut is Lung Airway)
     p.add_argument("--celltypist-model", default="Cells_Lung_Airway.pkl",
-                   help="CellTypist .pkl 모델명 (기본: Cells_Lung_Airway.pkl)")
+                   help="CellTypist .pkl model name (default: Cells_Lung_Airway.pkl)")
+
+    # ✅ (optional) CellTypist result path
+    p.add_argument("--celltypist-cache", default=None,
+                   help="Save CellTypist result(obs)/reload Excel file path(.xlsx). "
+                        "default : The same path with h5ad celltypist_predictions_<celltypist model name>.xlsx")
 
     return p.parse_args()
 
@@ -213,17 +221,18 @@ def main():
     merged_output = str(Path(args.output_tsv_path) if args.output_tsv_path
                         else tsv_input.parent / "merged_with_pipeline.tsv")
 
-    # h5ad 파일 (단일)
+    # h5ad file
     h5ad_file = _resolve_h5ad(args)
     print(f"🔎 Using h5ad: {h5ad_file}")
 
-    # 파이프라인 실행
-    ct_pipe = CellTypistPipeline(forced_model=args.celltypist_model)
+    # run pipeline 
+    ct_pipe = CellTypistPipeline(forced_model=args.celltypist_model,
+                                 cache_xlsx=args.celltypist_cache)
     sc_pipe = SCimilarityPipeline(model_path=str(args.scimilarity_model))
 
     print("\n" + "="*60 + "\n1) CellTypist running\n" + "="*60)
     ct_df = ct_pipe.run(h5ad_file)
-
+    
     print("\n" + "="*60 + "\n2) SCimilarity running\n" + "="*60)
     sc_df = sc_pipe.run(h5ad_file)
 
