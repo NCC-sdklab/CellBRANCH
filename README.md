@@ -158,7 +158,7 @@ data/
 - (If present) Tool levels: `{tool}_ann{1..5}`
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
 
-### GPU Requirements
+## GPU Requirements
 
 - This project uses PyTorch built with CUDA 12.x.
 - **Minimum NVIDIA GPU:** Compute Capability **≥ 7.0**.
