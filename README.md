@@ -158,6 +158,14 @@ data/
 - (If present) Tool levels: `{tool}_ann{1..5}`
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
 
+### GPU Requirements
+
+- This project uses PyTorch built with CUDA 12.x.
+- **Minimum NVIDIA GPU:** Compute Capability **≥ 7.0**.
+- **Not supported:** Pascal (6.x), e.g. **GT 1030, GTX 1050/1060/1070/1080, Titan Xp**.
+- **Supported families:** Volta/Turing/Ampere/Ada/Hopper and newer (7.x/8.x/9.x/…).
+- If your GPU is older than CC 7.0, run on CPU (e.g., set `CUDA_VISIBLE_DEVICES=""`) or use a legacy PyTorch/CUDA stack.
+
 ## Citation If you use this code in your research, please cite:
 ```bibtex
 @article{bidirectional_transformer_2025,
