@@ -82,7 +82,7 @@ Rscript MVCell_R_install_v2.R
 - **Step 2 (R)**: Run SingleR / ScType / scATOMIC and export per-cell CSV
 - **Step 3 (Python)**: Run CellTypist + SCimilarity and merge with Step2 CSV
 - **Step 4 (Python)**: Transfer to HLCA ann_level_1..5
-- **Step 5 (Python)**: Bidirectional Transformer prediction
+- **Step 5 (Python)**: MVCell prediction
 
 ```bash
 # Move to MVCell main folder
