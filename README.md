@@ -117,7 +117,6 @@ chmod +x run_all.sh
 - `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA levels (ann_level_1..5)
 - `mvcell_results/` — final transformer prediction artifacts
 
-SCimilarity model is cached under `./scimilarity/model_v1.1` (auto bootstrap on first run when using the default path).
 
 
 ### 2) Standalone Transformer Prediction (predict.py only)
