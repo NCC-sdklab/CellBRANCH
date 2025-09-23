@@ -127,7 +127,7 @@ Run transformer inference directly on HLCA-transferred TSV (e.g., merged_annleve
 python predict.py \
     --model-dir ./pretrained_model \
     --data-dir ./data \
-    --test-file ./data/test_set.tsv \ # you can replace your own data
+    --test-file test_set.tsv \ # You can replace the data with your own files. Make sure to place them in the `data/` folder.
     --output-dir ./results
 ```
 
