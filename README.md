@@ -157,6 +157,10 @@ data/
 - (If present) Tool levels: `{tool}_ann{1..5}`
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
 
+## System Requirements
+
+- **Minimum Linux version:** 22.04 LTS
+
 ## GPU Requirements
 
 - This project uses PyTorch built with CUDA 12.x.
