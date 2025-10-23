@@ -47,8 +47,10 @@ out_mvcell = file.path(out_dir, "mvcell_results/cell_type_predictions.csv")
 out_raw_annot = file.path(out_dir, "celltype_annotate/merged_with_pipeline.tsv")
 out_raw_annlevel = file.path(out_dir, "celltype_annotate/merged_annlevel_transfered.tsv")
 
-
-
+out_performance = file.path(out_dir, "performance_report")
+if (!dir.exists(out_performance)) {
+  dir.create(out_performance)
+}
 
 # ----- Load MVCell results -----
 
@@ -76,74 +78,355 @@ meta.m = merge(meta.m, test.data, all.x = T, by = "barcode")
 rownames(meta.m) = meta.m$barcode
 
 
-table(meta.m$ann_level_1, meta.m$celltypist_ann1)
-table(meta.m$ann_level_1, meta.m$scimilarity_ann1)
-table(meta.m$ann_level_1, meta.m$scATOMIC_ann1)
-table(meta.m$ann_level_1, meta.m$singleR_ann1)
-table(meta.m$ann_level_1, meta.m$sctype_ann1)
-table(meta.m$ann_level_1, meta.m$ann_level_1_prediction)
+
+# -------- Multiclass MCC (no extra packages) --------
+mcc_multiclass <- function(truth, pred) {
+  # truth and pred should be factors on the same level set
+  truth <- factor(truth)
+  pred  <- factor(pred, levels = levels(truth))
+  M <- table(truth, pred)              # K x K
+  
+  t_k <- rowSums(M)                    # true per class
+  p_k <- colSums(M)                    # pred per class
+  c   <- sum(diag(M))                  # trace
+  s   <- sum(M)                        # total
+  
+  num <- (c * s) - sum(t_k * p_k)
+  den <- sqrt( (s^2 - sum(p_k^2)) * (s^2 - sum(t_k^2)) )
+  
+  if (den == 0) return(NA_real_)
+  num / den
+}
+
+# -------- Per-class F1 and Macro-F1 (no MLmetrics) --------
+per_class_f1 <- function(truth, pred) {
+  lv <- levels(truth)
+  f1 <- setNames(numeric(length(lv)), lv)
+  
+  for (k in lv) {
+    tp <- sum(truth == k & pred == k, na.rm = TRUE)
+    fp <- sum(truth != k & pred == k, na.rm = TRUE)
+    fn <- sum(truth == k & pred != k, na.rm = TRUE)
+    
+    if ((tp + fp) == 0 || (tp + fn) == 0) {
+      f1[k] <- NA_real_
+    } else {
+      precision <- tp / (tp + fp)
+      recall    <- tp / (tp + fn)
+      if ((precision + recall) == 0) {
+        f1[k] <- NA_real_
+      } else {
+        f1[k] <- 2 * precision * recall / (precision + recall)
+      }
+    }
+  }
+  f1
+}
+
+# -------- Assemble results for your methods --------
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+methods <- c("ann_level_1_prediction", "celltypist_ann1", "scimilarity_ann1",
+             "scATOMIC_ann1", "singleR_ann1","sctype_ann1")
+
+truth <- factor(meta.m$ann_level_1)
+
+methods.name = c("MVCell", "celltypist", "SCimiliary", "scATOMIC", "singleR", "scType")
 
 
-#visualization. later
+score_rows <- lapply(methods, function(m) {
+  pred <- factor(meta.m[[m]], levels = levels(truth))
+  
+  # per-class F1 and macro-F1
+  f1_k <- per_class_f1(truth, pred)
+  f1_macro <- mean(f1_k, na.rm = TRUE)
+  
+  # overall MCC (multiclass)
+  mcc_overall <- mcc_multiclass(truth, pred)
+  
+  # per-class MCC (one-vs-rest)
+  lv <- levels(truth)
+  mcc_k <- sapply(lv, function(ct) {
+    bin_truth <- factor(ifelse(truth == ct, ct, "other"), levels = c(ct, "other"))
+    bin_pred  <- factor(ifelse(pred  == ct, ct, "other"), levels = c(ct, "other"))
+    mcc_multiclass(bin_truth, bin_pred)  # works for binary (2x2) as well
+  }, USE.NAMES = TRUE)
+  
+  rbind(
+    data.frame(method = m, metric = "F1_macro",  celltype = NA,       score = f1_macro),
+    data.frame(method = m, metric = "MCC",       celltype = NA,       score = mcc_overall),
+    data.frame(method = m, metric = "F1",        celltype = names(f1_k), score = unname(f1_k)),
+    data.frame(method = m, metric = "MCC_cell",  celltype = names(mcc_k), score = unname(mcc_k))
+  )
+}) %>% dplyr::bind_rows()
 
-# # ---- setting cores ----
-# available_cores <- parallel::detectCores(logical = TRUE)
-# ncore <- if (length(args) >= 2) as.integer(args[2]) else 0
-# if (is.na(ncore) || ncore < 0) ncore <- 0
-# 
-# if (ncore == 0) {
-#   # default is 4, but don't exceed available_cores - 2
-#   ncore <- min(4L, max(1L, available_cores - 2L))
-# }
-# 
-# # final safety clamp
-# ncore <- min(max(1L, ncore), max(1L, available_cores - 2L))
-# 
-# if (.Platform$OS.type == "windows") {
-#   BPPARAM <- BiocParallel::SnowParam(workers = ncore)
-# } else {
-#   BPPARAM <- BiocParallel::MulticoreParam(workers = ncore)
-# }
-# BiocParallel::register(BPPARAM)
-# message(sprintf("Using %d cores (of %d available)", ncore, available_cores))
-# 
-# colData(sce) = DataFrame(meta.m)
-# 
-# if (!"pca_logcounts" %in% assayNames(sce)) {
-#   dec.sce <- modelGeneVar(sce)
-#   hvgs = getTopHVGs(dec.sce, n=2000)
-#   
-#   sce = runPCA(sce, exprs_values = "logcounts", ncomponents = 50, subset_row = hvgs, scale = TRUE, name = "pca_logcounts")
-#   sce = runUMAP(sce, dimred = "pca_logcounts", ncomponents = 2, name = "umap_logcounts")
-#   
-# }
-# 
-# 
-# plotReducedDim(sce, dimred = "pca_logcounts", colour_by = "ann_level_1_prediction")
-# plotReducedDim(sce, dimred = "umap_logcounts", colour_by = "ann_level_1_prediction")
-# plotReducedDim(sce, dimred = "pca_logcounts", colour_by = "ann_level_2_prediction")
-# 
-# plotReducedDim(sce, dimred = "umap_logcounts", colour_by = "celltypist_ann1")
-# 
-# 
-# plotReducedDim(sce, dimred = "umap_logcounts", colour_by = "cell_type")
-# plotReducedDim(sce, dimred = "pca_logcounts", colour_by = "cell_type")
-# 
-# #testing more data
-# meta.m = meta.m[colnames(sce),]
-# #colData(sce) = meta.m
-# table(meta.m$ann_level_1, meta.m$celltypist_ann1)
-# table(meta.m$ann_level_1, meta.m$scimilarity_ann1)
-# table(meta.m$ann_level_1, meta.m$scATOMIC_ann1)
-# table(meta.m$ann_level_1, meta.m$singleR_ann1)
-# table(meta.m$ann_level_1, meta.m$sctype_ann1)
-# table(meta.m$ann_level_1, meta.m$ann_level_1_prediction)
-# 
-# plotReducedDim(sce, dimred = "pca_logcounts", colour_by = "celltypist_annot")
-# 
-# 
-# table()
-# 
-# 
-# meta.empty = meta.m[meta.m$scATOMIC_ann1 == "",]
-# meta.
+results_ann1 <- bind_rows(score_rows)
+results_ann1$algorithm <- methods.name[match(results_ann1$method, methods)]
+results_ann1$algorithm = factor(results_ann1$algorithm, levels = methods.name)
+
+write.csv(results_ann1, file = file.path(out_performance, "performance_report_ann1_all.csv"))
+
+
+
+# -------- Overall (F1_macro + MCC) with stars --------
+overall <- results_ann1 %>% 
+  filter(metric %in% c("F1_macro", "MCC")) %>%
+  group_by(metric) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup()
+
+overall.mcc.f1 = ggplot(overall, aes(x = algorithm, y = score, fill = metric)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(
+    data = overall %>% filter(best),
+    aes(label = "★", y = score),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Overall performance", x = "Method", y = "Score") +
+  theme_minimal()
+
+ggsave(filename = "Level1_performance_overall.png", plot = overall.mcc.f1, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
+# build per-class F1 (you already have `results`)
+perclass <- results_ann1 %>%
+  filter(metric == "F1") %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%            # keep a stable order
+  mutate(.rowid = row_number())
+
+pos <- position_dodge(width = 0.7)
+
+# 1) draw bars (but don't print yet)
+p0 <- ggplot(perclass, aes(x = celltype, y = score, fill = algorithm)) +
+  geom_col(position = pos, width = 0.6)
+
+# 2) extract exact x positions of bars
+gb <- ggplot_build(p0)
+barpos <- gb$data[[1]][, c("x","y","PANEL")]
+perclass_pos <- perclass
+perclass_pos$x_star <- barpos$x
+perclass_pos$y_star <- barpos$y + diff(range(barpos$y, na.rm = TRUE))*0.04  # a little above bar
+
+# 3) add stars at those x positions
+p_f1 <- p0 +
+  geom_text(
+    data = perclass_pos %>% filter(best),
+    aes(x = x_star, y = y_star, label = "★"),
+    inherit.aes = FALSE, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "F1 per Level‑1 cell type", x = "Cell type", y = "F1") +
+  theme_minimal()
+
+ggsave(filename = "Level1_performance_celltype_F1.png", plot = p_f1, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
+#MCC
+perclass_mcc <- results_ann1 %>%
+  filter(metric == "MCC_cell") %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%            # keep a stable order
+  mutate(.rowid = row_number())
+
+perclass_mcc <- perclass_mcc %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%
+  mutate(.rowid = row_number())
+
+pos2 <- position_dodge(width = 0.7)
+
+p0_mcc <- ggplot(perclass_mcc, aes(x = celltype, y = score, fill = algorithm)) +
+  geom_col(position = pos2, width = 0.6)
+
+gb2 <- ggplot_build(p0_mcc)
+barpos2 <- gb2$data[[1]][, c("x","y","PANEL")]
+perclass_mcc$x_star <- barpos2$x
+perclass_mcc$y_star <- barpos2$y + diff(range(barpos2$y, na.rm = TRUE))*0.04
+
+p_mcc <- p0_mcc +
+  geom_text(
+    data = perclass_mcc %>% filter(best),
+    aes(x = x_star, y = y_star, label = "★"),
+    inherit.aes = FALSE, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "MCC per Level‑1 cell type", x = "Cell type", y = "MCC") +
+  theme_minimal()
+
+ggsave(filename = "Level1_performance_celltype_MCC.png", plot = p_mcc, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
+#level 2
+
+methods <- c("ann_level_2_prediction", "celltypist_ann2", "scimilarity_ann2",
+             "scATOMIC_ann2", "singleR_ann2",
+             "sctype_ann2")
+truth <- factor(meta.m$ann_level_2)
+
+
+score_rows <- lapply(methods, function(m) {
+  pred <- factor(meta.m[[m]], levels = levels(truth))
+  
+  # per-class F1 and macro-F1
+  f1_k <- per_class_f1(truth, pred)
+  f1_macro <- mean(f1_k, na.rm = TRUE)
+  
+  # overall MCC (multiclass)
+  mcc_overall <- mcc_multiclass(truth, pred)
+  
+  # per-class MCC (one-vs-rest)
+  lv <- levels(truth)
+  mcc_k <- sapply(lv, function(ct) {
+    bin_truth <- factor(ifelse(truth == ct, ct, "other"), levels = c(ct, "other"))
+    bin_pred  <- factor(ifelse(pred  == ct, ct, "other"), levels = c(ct, "other"))
+    mcc_multiclass(bin_truth, bin_pred)  # works for binary (2x2) as well
+  }, USE.NAMES = TRUE)
+  
+  rbind(
+    data.frame(method = m, metric = "F1_macro",  celltype = NA,       score = f1_macro),
+    data.frame(method = m, metric = "MCC",       celltype = NA,       score = mcc_overall),
+    data.frame(method = m, metric = "F1",        celltype = names(f1_k), score = unname(f1_k)),
+    data.frame(method = m, metric = "MCC_cell",  celltype = names(mcc_k), score = unname(mcc_k))
+  )
+}) %>% dplyr::bind_rows()
+
+results_ann2 <- bind_rows(score_rows)
+results_ann2$algorithm <- methods.name[match(results_ann2$method, methods)]
+results_ann2$algorithm = factor(results_ann2$algorithm, levels = methods.name)
+
+write.csv(results_ann2, file = file.path(out_performance, "performance_report_ann2_all.csv"))
+
+
+# -------- Overall (F1_macro + MCC) with stars --------
+overall <- results_ann2 %>% 
+  filter(metric %in% c("F1_macro", "MCC")) %>%
+  group_by(metric) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup()
+
+overall.mcc.f1 = ggplot(overall, aes(x = algorithm, y = score, fill = metric)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(
+    data = overall %>% filter(best),
+    aes(label = "★", y = score),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Overall performance: Level 2", x = "Method", y = "Score") +
+  theme_minimal()
+
+ggsave(filename = "Level2_performance_overall.png", plot = overall.mcc.f1, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
+# build per-class F1 (you already have `results`)
+perclass <- results_ann2 %>%
+  filter(metric == "F1") %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%            # keep a stable order
+  mutate(.rowid = row_number())
+
+pos <- position_dodge(width = 0.7)
+
+# 1) draw bars (but don't print yet)
+p0 <- ggplot(perclass, aes(x = celltype, y = score, fill = algorithm)) +
+  geom_col(position = pos, width = 0.6)
+
+# 2) extract exact x positions of bars
+gb <- ggplot_build(p0)
+barpos <- gb$data[[1]][, c("x","y","PANEL")]
+perclass_pos <- perclass
+perclass_pos$x_star <- barpos$x
+perclass_pos$y_star <- barpos$y + diff(range(barpos$y, na.rm = TRUE))*0.04  # a little above bar
+
+# 3) add stars at those x positions
+p_f1 <- p0 +
+  geom_text(
+    data = perclass_pos %>% filter(best),
+    aes(x = x_star, y = y_star, label = "★"),
+    inherit.aes = FALSE, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "F1 per Level-2 cell type", x = "Cell type", y = "F1") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
+
+ggsave(filename = "Level2_performance_celltype_F1.png", plot = p_f1, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
+#MCC
+perclass_mcc <- results_ann2 %>%
+  filter(metric == "MCC_cell") %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%            # keep a stable order
+  mutate(.rowid = row_number())
+
+perclass_mcc <- perclass_mcc %>%
+  mutate(method = factor(method, levels = methods),
+         celltype = factor(celltype, levels = unique(celltype))) %>%
+  group_by(celltype) %>%
+  mutate(best = score == max(score, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(celltype, method) %>%
+  mutate(.rowid = row_number())
+
+pos2 <- position_dodge(width = 0.7)
+
+p0_mcc <- ggplot(perclass_mcc, aes(x = celltype, y = score, fill = algorithm)) +
+  geom_col(position = pos2, width = 0.6)
+
+gb2 <- ggplot_build(p0_mcc)
+barpos2 <- gb2$data[[1]][, c("x","y","PANEL")]
+perclass_mcc$x_star <- barpos2$x
+perclass_mcc$y_star <- barpos2$y + diff(range(barpos2$y, na.rm = TRUE))*0.04
+
+p_mcc <- p0_mcc +
+  geom_text(
+    data = perclass_mcc %>% filter(best),
+    aes(x = x_star, y = y_star, label = "★"),
+    inherit.aes = FALSE, size = 6
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "MCC per Level‑2 cell type", x = "Cell type", y = "MCC") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
+
+
+ggsave(filename = "Level2_performance_celltype_MCC.png", plot = p_mcc, path = out_performance,
+       width = 7, height = 5, bg = "white")
+
+
