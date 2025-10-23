@@ -53,10 +53,10 @@ Create them from the provided YAML files:
 ```bash
 # Create MVCell env
 cd isntall
-conda env create -f MVCell_env.yaml   # or: mamba env create -f ...
+conda env create -f MVCell_env.yml   # or: mamba env create -f ...
 
 # Create r-reticulate
-conda env create -f r-reticulate-mvcell_env.yaml    # or: mamba env create -f ...
+conda env create -f r-reticulate-mvcell_env.yml    # or: mamba env create -f ...
 ```
 
 **Why two environments?**
@@ -82,7 +82,7 @@ Rscript MVCell_R_install_v2.R
 - **Step 2 (R)**: Run SingleR / ScType / scATOMIC and export per-cell CSV
 - **Step 3 (Python)**: Run CellTypist + SCimilarity and merge with Step2 CSV
 - **Step 4 (Python)**: Transfer to HLCA ann_level_1..5
-- **Step 5 (Python)**: Bidirectional Transformer prediction
+- **Step 5 (Python)**: MVCell prediction
 
 ```bash
 # Move to MVCell main folder
@@ -117,7 +117,6 @@ chmod +x run_all.sh
 - `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA levels (ann_level_1..5)
 - `mvcell_results/` — final transformer prediction artifacts
 
-SCimilarity model is cached under `./scimilarity/model_v1.1` (auto bootstrap on first run when using the default path).
 
 
 ### 2) Standalone Transformer Prediction (predict.py only)
@@ -128,7 +127,7 @@ Run transformer inference directly on HLCA-transferred TSV (e.g., merged_annleve
 python predict.py \
     --model-dir ./pretrained_model \
     --data-dir ./data \
-    --test-file ./data/test_set.tsv \ # you can replace your own data
+    --test-file test_set.tsv \ # You can replace the data with your own files. Make sure to place them in the `data/` folder.
     --output-dir ./results
 ```
 
@@ -157,6 +156,18 @@ data/
 - Tool scores: `{tool}_score` for tools in {singleR, sctype, scATOMIC, scimilarity, celltypist}
 - (If present) Tool levels: `{tool}_ann{1..5}`
 - (Optional) Ground truth levels for eval: `ann_level_{1..5}`
+
+## System Requirements
+
+- **Minimum Linux version:** 22.04 LTS
+
+## GPU Requirements
+
+- This project uses PyTorch built with CUDA 12.x.
+- **Minimum NVIDIA GPU:** Compute Capability **≥ 7.0**.
+- **Not supported:** Pascal (6.x), e.g. **GT 1030, GTX 1050/1060/1070/1080, Titan Xp**.
+- **Supported families:** Volta/Turing/Ampere/Ada/Hopper and newer (7.x/8.x/9.x/…).
+- If your GPU is older than CC 7.0, run on CPU (e.g., set `CUDA_VISIBLE_DEVICES=""`) or use a legacy PyTorch/CUDA stack.
 
 ## Citation If you use this code in your research, please cite:
 ```bibtex

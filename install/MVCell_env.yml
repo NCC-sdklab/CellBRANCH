@@ -259,7 +259,7 @@ dependencies:
       - pytz==2025.2
       - requests==2.32.4
       - scanpy==1.11.4
-      - scikit-learn==1.7.1
+      - scikit-learn==1.6.1
       - scimilarity==0.4.1
       - scipy==1.16.1
       - seaborn==0.13.2
