@@ -1,42 +1,42 @@
 Cell Type Annotation Prediction Report
 ==================================================
-Total cells predicted: 5,351
+Total cells predicted: 257,795
 
 ann_level_1 predictions (Top 5):
 ------------------------------
-  Epithelial: 5,134 cells (95.9%)
-  Immune: 206 cells (3.8%)
-  Endothelial: 8 cells (0.1%)
-  Stroma: 3 cells (0.1%)
+  Immune: 222,307 cells (86.2%)
+  Epithelial: 27,253 cells (10.6%)
+  Endothelial: 4,923 cells (1.9%)
+  Stroma: 3,312 cells (1.3%)
 
 ann_level_2 predictions (Top 5):
 ------------------------------
-  Airway epithelium: 4,941 cells (92.3%)
-  Lymphoid: 198 cells (3.7%)
-  Alveolar epithelium: 190 cells (3.6%)
-  Myeloid: 8 cells (0.1%)
-  Blood vessels: 8 cells (0.1%)
+  Myeloid: 140,030 cells (54.3%)
+  Lymphoid: 82,277 cells (31.9%)
+  Airway epithelium: 13,999 cells (5.4%)
+  Alveolar epithelium: 13,136 cells (5.1%)
+  Blood vessels: 4,403 cells (1.7%)
 
 ann_level_3 predictions (Top 5):
 ------------------------------
-  Secretory: 4,726 cells (88.3%)
-  AT2: 188 cells (3.5%)
-  T cell lineage: 180 cells (3.4%)
-  Multiciliated lineage: 173 cells (3.2%)
-  Basal: 39 cells (0.7%)
+  Macrophages: 99,302 cells (38.5%)
+  T cell lineage: 61,346 cells (23.8%)
+  Monocytes: 29,872 cells (11.6%)
+  B cell lineage: 15,944 cells (6.2%)
+  AT2: 11,146 cells (4.3%)
 
 ann_level_4 predictions (Top 5):
 ------------------------------
-  Goblet: 4,375 cells (81.8%)
-  Club: 350 cells (6.5%)
-  AT2 proliferating: 188 cells (3.5%)
-  Multiciliated: 173 cells (3.2%)
-  CD8 T cells: 167 cells (3.1%)
+  Alveolar macrophages: 66,993 cells (26.0%)
+  CD8 T cells: 35,309 cells (13.7%)
+  Interstitial macrophages: 32,309 cells (12.5%)
+  CD4 T cells: 25,822 cells (10.0%)
+  Classical monocytes: 24,505 cells (9.5%)
 
 ann_level_5 predictions (Top 5):
 ------------------------------
-  Goblet (bronchial): 2,325 cells (43.4%)
-  Goblet (nasal): 2,044 cells (38.2%)
-  Unknown: 439 cells (8.2%)
-  Club (nasal): 349 cells (6.5%)
-  Multiciliated (non-nasal): 173 cells (3.2%)
+  Unknown: 147,499 cells (57.2%)
+  Alveolar Mph CCL3+: 59,119 cells (22.9%)
+  Monocyte-derived Mph: 30,323 cells (11.8%)
+  Alveolar Mph MT-positive: 4,270 cells (1.7%)
+  Alveolar Mph proliferating: 3,604 cells (1.4%)
