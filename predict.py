@@ -59,8 +59,8 @@ def load_model_and_encoders(model_dir, device, ont_df):
     # For now, using default values that match training
     d_model = 256
     nhead = 8
-    num_layers = 2
-    dropout = 0.5
+    num_layers = 3
+    dropout = 0.10071612370546126
     
     # Get terminal nodes
     terminal_nodes = identify_terminal_nodes(ont_df)
