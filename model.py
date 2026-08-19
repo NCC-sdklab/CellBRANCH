@@ -104,25 +104,41 @@ class SimpleBidirectionalTransformer(nn.Module):
         self._create_hierarchical_masks(ont_df, enc_out)
     
     def _create_hierarchical_masks(self, ont_df, enc_out):
-        """Create hierarchical constraint masks"""
+        """Create hierarchical constraint masks.
+
+        Every label in the ontology is in the encoders by construction: they are
+        fitted on the union of the ontology, the training labels and the test
+        labels. So a label that cannot be encoded means the tree and the
+        checkpoint are not the pair they are being used as, and the run stops.
+
+        This used to pass silently. A tree a year out of date left twelve
+        parent-child relations out of the mask and nothing said so — and a
+        relation dropped from the mask is a child the model can never predict,
+        for every cell, with no error to trace it back to.
+        """
         for i in range(1, 5):
             p, c = f"ann_level_{i}", f"ann_level_{i+1}"
             rel = ont_df[[p, c]].fillna("Unknown").groupby(p)[c].unique().to_dict()
             p_size, c_size = len(enc_out[p].classes_), len(enc_out[c].classes_)
             mask = torch.zeros(p_size, c_size, dtype=torch.bool, device=self.device)
-            
+
+            known_p, known_c = set(enc_out[p].classes_), set(enc_out[c].classes_)
+            unknown = sorted(
+                {f"{p}={x!r}" for x in rel if x not in known_p}
+                | {f"{c}={y!r}" for x, ys in rel.items() if x in known_p
+                   for y in ys if y not in known_c}
+            )
+            if unknown:
+                raise ValueError(
+                    "the ontology names cell types this checkpoint has no output "
+                    f"for, so the two do not belong together: {', '.join(unknown)}"
+                )
+
             for p_cls, children in rel.items():
-                try:
-                    p_idx = enc_out[p].transform([p_cls])[0]
-                    for ch in children:
-                        try:
-                            c_idx = enc_out[c].transform([ch])[0]
-                            mask[p_idx, c_idx] = True
-                        except:
-                            pass
-                except:
-                    pass
-            
+                p_idx = enc_out[p].transform([p_cls])[0]
+                for ch in children:
+                    mask[p_idx, enc_out[c].transform([ch])[0]] = True
+
             self.register_buffer(f"mask_{i}_{i+1}", mask)
     
     def forward(self, cat_idxs, scores, parent_idxs=None, enc_in=None):
