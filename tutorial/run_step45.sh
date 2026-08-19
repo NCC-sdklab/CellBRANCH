@@ -108,13 +108,13 @@ HLCA_TSV_ABS="$(readlink -f "${HLCA_TSV}")"
 MODEL_DIR_ABS="$(readlink -f "${MODEL_DIR}")"
 DATA_DIR_ABS="$(readlink -f "${DATA_DIR}")"
 
-if [[ ! -f "${MODEL_DIR_ABS}/encoders_in.pkl" ]]; then
-  echo "[Error] encoders_in.pkl not found in: ${MODEL_DIR_ABS}"
-  echo "        확인: $(find "${MODEL_DIR_ABS}" -maxdepth 3 -name 'encoders_in.pkl' 2>/dev/null || true)"
-  exit 1
-fi
-if [[ ! -f "${MODEL_DIR_ABS}/encoders_out.pkl" ]]; then
-  echo "[Error] encoders_out.pkl not found in: ${MODEL_DIR_ABS}"
+# The checkpoint carries its own label encoders, so one file is the whole
+# model. A directory prepared before that still works: predict.py falls back
+# to best_multilevel_seed*.pth beside encoders_in.pkl and encoders_out.pkl.
+if ! compgen -G "${MODEL_DIR_ABS}/*.pt" > /dev/null \
+   && [[ ! -f "${MODEL_DIR_ABS}/encoders_in.pkl" ]]; then
+  echo "[Error] no checkpoint found in: ${MODEL_DIR_ABS}"
+  echo "        expected model.pt, or best_multilevel_seed*.pth with encoders_in.pkl"
   exit 1
 fi
 
