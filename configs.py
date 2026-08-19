@@ -30,9 +30,9 @@ class ModelConfig:
         self.patience = 15
         
         # Loss function weights
-        self.forward_weight = 1.5
-        self.reverse_weight = 0.8
-        self.consistency_weight = 0.1
+        self.forward_weight = 2.0
+        self.reverse_weight = 0.2
+        self.consistency_weight = 0.15
         
         # Data split
         self.val_size = 0.4

@@ -86,8 +86,8 @@ def run_epoch(model, loader, optimizer=None, is_train=False, device='cpu',
                 
                 loss = stable_bidirectional_loss(forward_outputs, reverse_outputs, targets, 
                                                 terminal_nodes_idx, model, target_cols,
-                                                forward_weight=1.5, reverse_weight=0.8, 
-                                                consistency_weight=0.1, device=device)
+                                                forward_weight=2.0, reverse_weight=0.2, 
+                                                consistency_weight=0.15, device=device)
                 
                 # Collect predictions
                 for idx, lvl in enumerate(target_cols):

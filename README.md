@@ -29,7 +29,7 @@ Feature Projection
 │  Constraints    │  with Forward   │
 └─────────────────┴─────────────────┘
     ↓
-Combined Loss: Forward(3.0x) + Reverse(0.3x) + Consistency(0.1x)
+Combined Loss: Forward(2.0x) + Reverse(0.2x) + Consistency(0.15x)
 ```
 
 ## Installation

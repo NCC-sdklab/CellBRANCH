@@ -10,6 +10,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, 
     f1_score, matthews_corrcoef
@@ -44,24 +45,88 @@ def parse_args():
     
     return parser.parse_args()
 
+BUNDLE_KEYS = ("state_dict", "params", "enc_in_classes", "enc_out_classes")
+
+
+def _encoder_from_classes(classes):
+    """Rebuild a LabelEncoder from the class list a checkpoint carries.
+
+    A LabelEncoder is a sorted array of labels and their positions, and
+    `classes_` is the whole of that state. Restoring it from the array stored
+    in the checkpoint gives back the encoder the model was trained with,
+    without a second file that has to be kept beside the weights.
+    """
+    encoder = LabelEncoder()
+    encoder.classes_ = np.asarray(classes)
+    return encoder
+
+
+def _find_bundle(model_dir):
+    """The checkpoint that carries its own encoders, if the directory has one.
+
+    A bundle holds the weights, the architecture and both label encoders
+    together, so they cannot be separated or paired with the wrong partner —
+    the failure that raises nothing and returns the wrong cell type.
+    """
+    for name in sorted(f for f in os.listdir(model_dir) if f.endswith(".pt")):
+        path = os.path.join(model_dir, name)
+        try:
+            checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        except Exception:  # noqa: BLE001 - a file that will not open is not a bundle
+            continue
+        if isinstance(checkpoint, dict) and all(k in checkpoint for k in BUNDLE_KEYS):
+            return path, checkpoint
+    return None
+
+
 def load_model_and_encoders(model_dir, device, ont_df):
     """Load trained model and encoders"""
     print(f"Loading model and encoders from {model_dir}")
     
-    # Load encoders
-    enc_in, enc_out = load_encoders(model_dir)
-    
     # Constants (should match training)
     TOOLS = ["singleR", "sctype", "scATOMIC", "scimilarity", "celltypist"]
     SCORE_COLS = [f"{t}_score" for t in TOOLS]
-    
-    # Load model configuration (you might want to save this during training)
-    # For now, using default values that match training
-    d_model = 256
-    nhead = 8
-    num_layers = 3
-    dropout = 0.10071612370546126
-    
+
+    bundle = _find_bundle(model_dir)
+    if bundle is not None:
+        bundle_path, checkpoint = bundle
+        print(f"Loading checkpoint bundle {bundle_path}")
+        enc_in = {
+            column: _encoder_from_classes(classes)
+            for column, classes in checkpoint["enc_in_classes"].items()
+        }
+        enc_out = {
+            column: _encoder_from_classes(classes)
+            for column, classes in checkpoint["enc_out_classes"].items()
+        }
+        params = checkpoint["params"]
+        d_model = int(params["d_model"])
+        nhead = int(params["nhead"])
+        num_layers = int(params["num_layers"])
+        dropout = float(params["dropout"])
+        state_dict = checkpoint["state_dict"]
+    else:
+        # The earlier layout: bare weights beside two pickled encoders, with
+        # the architecture written here rather than travelling with them. Kept
+        # so a model directory prepared before the bundle existed still runs.
+        enc_in, enc_out = load_encoders(model_dir)
+        d_model = 256
+        nhead = 8
+        num_layers = 3
+        dropout = 0.10071612370546126
+        weights_path = None
+        for f in sorted(os.listdir(model_dir)):
+            if f.startswith("best_multilevel_seed") and f.endswith(".pth"):
+                weights_path = os.path.join(model_dir, f)
+                break
+        if weights_path is None:
+            raise FileNotFoundError(
+                f"No checkpoint found in {model_dir}: expected a .pt bundle, or "
+                "best_multilevel_seed*.pth beside encoders_in.pkl and encoders_out.pkl"
+            )
+        print(f"Loading model weights from {weights_path}")
+        state_dict = torch.load(weights_path, map_location=device)
+
     # Get terminal nodes
     terminal_nodes = identify_terminal_nodes(ont_df)
     terminal_nodes_idx = get_terminal_nodes_idx(terminal_nodes, enc_out)
@@ -73,23 +138,11 @@ def load_model_and_encoders(model_dir, device, ont_df):
         dropout=dropout, device=device
     ).to(device)
     
-    # Load model weights
-    model_path = None
-    for f in os.listdir(model_dir):
-        if f.startswith("best_multilevel_seed") and f.endswith(".pth"):
-            model_path = os.path.join(model_dir, f)
-            break
-    
-    if model_path is None:
-        raise FileNotFoundError("No model file found in model directory")
-    
-    print(f"Loading model weights from {model_path}")
-    checkpoint = torch.load(model_path, map_location=device)
-    if any(key.startswith('_orig_mod.') for key in checkpoint.keys()):
+    if any(key.startswith('_orig_mod.') for key in state_dict.keys()):
         # strip torch.compile prefix
-        checkpoint = { (k[10:] if k.startswith('_orig_mod.') else k): v for k, v in checkpoint.items() }
+        state_dict = { (k[10:] if k.startswith('_orig_mod.') else k): v for k, v in state_dict.items() }
 
-    model.load_state_dict(checkpoint)
+    model.load_state_dict(state_dict)
     model.eval()
     
     return model, enc_in, enc_out, terminal_nodes_idx
