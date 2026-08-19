@@ -13,7 +13,7 @@ Immune,Myeloid,Dendritic cells,Plasmacytoid DCs,
 Immune,Myeloid,Mast cells,,
 Immune,Lymphoid,T cell lineage,CD4 T cells,
 Immune,Lymphoid,T cell lineage,CD8 T cells,
-Immune,Lymphoid,T cell lineage,T cells proliferating,T cells proliferating
+Immune,Lymphoid,T cell lineage,T cells proliferating,
 Immune,Lymphoid,B cell lineage,B cells,
 Immune,Lymphoid,B cell lineage,Plasma cells,
 Immune,Lymphoid,Innate lymphoid cell NK,NK cells,
@@ -27,20 +27,20 @@ Epithelial,Airway epithelium,Secretory,Goblet,Goblet (bronchial)
 Epithelial,Airway epithelium,Secretory,Goblet,Goblet (subsegmental)
 Epithelial,Airway epithelium,Secretory,Goblet,Goblet (nasal)
 Epithelial,Airway epithelium,Secretory,Transitional Club-AT2,pre-TB secretory
+Epithelial,Airway epithelium,Secretory,Transitional Club-AT2,AT0
 Epithelial,Airway epithelium,Multiciliated lineage,Deuterosomal,
 Epithelial,Airway epithelium,Multiciliated lineage,Multiciliated,Multiciliated (nasal)
 Epithelial,Airway epithelium,Multiciliated lineage,Multiciliated,Multiciliated (non-nasal)
 Epithelial,Airway epithelium,Rare,Ionocyte,
 Epithelial,Airway epithelium,Rare,Tuft,
-Epithelial,Airway epithelium,Neuroendocrine,Neuroendocrine,
+Epithelial,Airway epithelium,Rare,Neuroendocrine,
+Epithelial,Submucosal Gland,Submucosal Secretory,SMG duct,
+Epithelial,Submucosal Gland,Submucosal Secretory,SMG mucous,
+Epithelial,Submucosal Gland,Submucosal Secretory,SMG serous,
+Epithelial,Submucosal Gland,Submucosal Secretory,SMG serous,SMG serous (bronchial)
+Epithelial,Submucosal Gland,Submucosal Secretory,SMG serous,SMG serous (nasal)
 Epithelial,Alveolar epithelium,AT1,,
 Epithelial,Alveolar epithelium,AT2,AT2 proliferating,
-Epithelial,Alveolar epithelium,AT0,AT0,AT0
-Epithelial,Submucosal Gland,Submucosal Secretory,,
-Epithelial,Submucosal Gland,SMG mucous,SMG mucous,
-Epithelial,Submucosal Gland,SMG duct,SMG duct,
-Epithelial,Submucosal Gland,SMG serous,SMG serous,SMG serous (bronchial)
-Epithelial,Submucosal Gland,SMG serous,SMG serous,SMG serous (nasal)
 Endothelial,Blood vessels,EC capillary,EC aerocyte capillary,
 Endothelial,Blood vessels,EC capillary,EC general capillary,
 Endothelial,Blood vessels,EC venous,EC venous systemic,
