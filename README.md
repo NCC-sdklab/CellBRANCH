@@ -138,7 +138,7 @@ Key arguments are:
 | `--seed` | `9401` | Random seed |
 | `--output-dir` | `results` | Prediction output directory |
 
-### Harmonisation and inference only
+### Steps 4-5: Harmonisation and CellBRANCH Inference
 
 If raw outputs from the five component annotators are already available, Steps 4 and 5 can be run without repeating annotation:
 
@@ -215,7 +215,7 @@ sha256sum pretrained_model/model.pt data/HLCA_tree.csv
 
 The included `data/test_set.tsv` contains 1,999 held-out cells. `data/step45_tutorial_data_set.tsv` contains 6,000 rows for demonstrating label harmonisation and inference.
 
-## Scope
+## Manuscript Evaluation
 
 In the manuscript evaluation, CellBRANCH outperformed each of its five component annotators in macro-F1 and Matthews correlation coefficient at all five hierarchy levels on held-out HLCA cells. The Matthews correlation coefficient difference over the strongest component increased from 0.044 at level 1 to 0.310 at level 5. Across ten independent lung cancer studies, the evaluation comprised 498,250 cells. When all five component annotators were incorrect, CellBRANCH recovered the reference label for 49.1% of cells at level 4 and 55.8% at level 5.
 
