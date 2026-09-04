@@ -6,40 +6,6 @@ CellBRANCH integrates predictions from five independent cell-type annotation too
 
 CellBRANCH is an integration model rather than a classifier that reads gene expression directly. The full pipeline in `run_all.sh` starts from an `.h5ad` count matrix, runs the five component annotators, harmonises their outputs, and then applies the CellBRANCH checkpoint.
 
-## Features
-
-- Integrates SingleR, ScType, scATOMIC, SCimilarity, and CellTypist.
-- Produces a complete annotation path from `ann_level_1` through `ann_level_5`.
-- Uses a hard parent-child mask derived from `data/HLCA_tree.csv`.
-- Includes the exact pretrained checkpoint used for the manuscript evaluation.
-- Supports the complete `.h5ad` workflow, harmonisation plus prediction, or standalone transformer inference.
-- Uses CUDA automatically when available and otherwise runs transformer inference on CPU.
-
-## Workflow
-
-```text
-.h5ad count matrix
-        |
-        v
-SingleR | ScType | scATOMIC | SCimilarity | CellTypist
-        |
-        v
-Tool-specific labels and confidence scores
-        |
-        v
-Mapping to the shared five-level HLCA hierarchy
-        |
-        v
-CellBRANCH bidirectional hierarchical transformer
-        |
-        v
-A valid cell-type path at levels 1-5
-```
-
-The model input contains five mapped labels from each annotator, giving 25 categorical features, plus one confidence score per annotator. During training, the forward and reverse decoders exchange information across hierarchy depth and are regularised for consistency. At inference, the masked forward decoder supplies the reported five-level path.
-
-The bundled checkpoint uses a model dimension of 256, eight attention heads, three decoder layers, and dropout of 0.1007. The forward, reverse, and consistency loss weights are 2.0, 0.2, and 0.15, respectively.
-
 ## Installation
 
 CellBRANCH is designed for Linux and uses two Conda environments. A CUDA-capable GPU is optional for transformer inference. The full component-annotation workflow also requires R and may take substantially longer on large datasets.
@@ -155,6 +121,31 @@ bash tutorial/run_step45.sh \
 
 This writes the mapped table to `tutorial/step45_results/merged_annlevel_transfered.tsv` and final predictions to `tutorial/step45_results/step5_result/`.
 
+## Workflow
+
+```text
+.h5ad count matrix
+        |
+        v
+SingleR | ScType | scATOMIC | SCimilarity | CellTypist
+        |
+        v
+Tool-specific labels and confidence scores
+        |
+        v
+Mapping to the shared five-level HLCA hierarchy
+        |
+        v
+CellBRANCH bidirectional hierarchical transformer
+        |
+        v
+A valid cell-type path at levels 1-5
+```
+
+The model input contains five mapped labels from each annotator, giving 25 categorical features, plus one confidence score per annotator. During training, the forward and reverse decoders exchange information across hierarchy depth and are regularised for consistency. At inference, the masked forward decoder supplies the reported five-level path.
+
+The bundled checkpoint uses a model dimension of 256, eight attention heads, three decoder layers, and dropout of 0.1007. The forward, reverse, and consistency loss weights are 2.0, 0.2, and 0.15, respectively.
+
 ## Input Contract
 
 Standalone inference expects a tab-separated table with a `barcode` column. For each of the five annotators, it accepts the mapped columns `{tool}_ann1` through `{tool}_ann5` and a `{tool}_score` column, where `{tool}` is one of:
@@ -214,12 +205,6 @@ sha256sum pretrained_model/model.pt data/HLCA_tree.csv
 ```
 
 The included `data/test_set.tsv` contains 1,999 held-out cells. `data/step45_tutorial_data_set.tsv` contains 6,000 rows for demonstrating label harmonisation and inference.
-
-## Manuscript Evaluation
-
-In the manuscript evaluation, CellBRANCH outperformed each of its five component annotators in macro-F1 and Matthews correlation coefficient at all five hierarchy levels on held-out HLCA cells. The Matthews correlation coefficient difference over the strongest component increased from 0.044 at level 1 to 0.310 at level 5. Across ten independent lung cancer studies, the evaluation comprised 498,250 cells. When all five component annotators were incorrect, CellBRANCH recovered the reference label for 49.1% of cells at level 4 and 55.8% at level 5.
-
-The same pretrained integration model was also evaluated on Visium HD spatial transcriptomics without retraining. Spatial segmentation and cell-by-gene matrix generation must be completed before running the annotation and integration workflow; those preprocessing steps are outside this repository's default command-line interface.
 
 ## Citation
 
