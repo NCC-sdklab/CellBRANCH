@@ -2,7 +2,7 @@
 
 Automatic cell type annotation for single cell RNA data
 
-## Bidirectional Hierarchical Transformer for Cell Type Annotation
+## CellBRANCH: Integrating heterogeneous cell-type annotators through masked bidirectional tree-structured hierarchical classification
 
 A PyTorch implementation of a bidirectional hierarchical transformer model for automated cell type annotation using multiple annotation tools.
 
