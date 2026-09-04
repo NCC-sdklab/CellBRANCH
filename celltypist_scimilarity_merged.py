@@ -69,7 +69,7 @@ def merge_and_save_results(
     sc_label_col = _pick_first(scdf.columns, ["predictions_unconstrained", "prediction", "annot"])
     sc_score_col = _pick_first(scdf.columns, ["vsAll_weighted", "score", "conf"])
     if sc_label_col is None:
-        raise KeyError(f"MVCell does not find the label column of SCimilarity. Existing column : {list(scdf.columns)}")
+        raise KeyError(f"CellBRANCH does not find the label column of SCimilarity. Existing column : {list(scdf.columns)}")
     if sc_score_col is None:
         scdf["scimilarity_score"] = pd.NA
         sc_df = scdf[["barcode", sc_label_col, "scimilarity_score"]].rename(
@@ -192,7 +192,7 @@ def parse_args():
     p = argparse.ArgumentParser(
         description="Run CellTypist + SCimilarity and merge with an existing per-cell TSV (no config & no auto-discovery)."
     )
-    p.add_argument("input_tsv_path", help="Step2 output CSV/TSV (e.g., .../celltype_annotate/..._MVCell_annotate.csv)")
+    p.add_argument("input_tsv_path", help="Step2 output CSV/TSV (e.g., .../celltype_annotate/..._CellBRANCH_annotate.csv)")
     p.add_argument("output_tsv_path", nargs="?", default=None,
                    help="Output TSV (default: merged_with_pipeline.tsv next to input)")
     p.add_argument("-m", "--scimilarity-model", default=default_scim_path,

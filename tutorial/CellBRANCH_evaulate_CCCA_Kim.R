@@ -1,7 +1,7 @@
 
 #!/usr/bin/env Rscript
 
-# MVCell standalone run script — Part 2 (annotation)
+# CellBRANCH standalone run script — Part 2 (annotation)
 # Runs SingleR, ScType, and scATOMIC, then exports per-cell annotations and scores.
 
 suppressPackageStartupMessages({
@@ -44,7 +44,7 @@ if (!is.na(benchmark.num)) {
 
 #names
 out_rds  <- file.path(out_dir, paste0(out.base, "_sce.rds"))
-out_mvcell = file.path(out_dir, "mvcell_results/cell_type_predictions.csv")
+out_cellbranch = file.path(out_dir, "cellbranch_results/cell_type_predictions.csv")
 out_raw_annot = file.path(out_dir, "celltype_annotate/merged_with_pipeline.tsv")
 out_raw_annlevel = file.path(out_dir, "celltype_annotate/merged_annlevel_transfered.tsv")
 
@@ -53,10 +53,10 @@ if (!dir.exists(out_performance)) {
   dir.create(out_performance)
 }
 
-# ----- Load MVCell results -----
+# ----- Load CellBRANCH results -----
 
-if (!file.exists(out_mvcell)) stop("Missing MVCell results: ", out_mvcell)
-mvcell.df = read.csv(out_mvcell)
+if (!file.exists(out_cellbranch)) stop("Missing CellBRANCH results: ", out_cellbranch)
+cellbranch.df = read.csv(out_cellbranch)
 
 if (!file.exists(out_rds)) stop("Missing preprocessed RDS: ", out_rds)
 sce <- readRDS(out_rds)
@@ -64,13 +64,13 @@ sce <- readRDS(out_rds)
 meta = as.data.frame(colData(sce))
 if (!"barcode" %in% colnames(meta)) meta$barcode <- rownames(meta)
 
-if (identical(meta$barcode, mvcell.df$barcode)) {
+if (identical(meta$barcode, cellbranch.df$barcode)) {
   message("barcodes consistent. Proceeding...")
 } else {
   stop("barcode mismatch")
 }
 
-meta.m = merge(meta, mvcell.df, all.x = T, by = "barcode", sorf = F)
+meta.m = merge(meta, cellbranch.df, all.x = T, by = "barcode", sorf = F)
 rownames(meta.m) = meta.m$barcode
 meta.m = meta.m[colnames(sce),]
 
@@ -86,7 +86,7 @@ table(meta.m$cell_subtype, meta.m$celltypist_ann4)
 
 
 
-reference.annot = "/mnt/gluster_server/jhlee/Projects/python-tools/MVCell/MVCell/data/HLCA_tree.csv"
+reference.annot = "/mnt/gluster_server/jhlee/Projects/python-tools/CellBRANCH/CellBRANCH/data/HLCA_tree.csv"
 ref.df = read.csv(reference.annot)
 
 cell_types <- c("B_cell", "Dendritic", "Endothelial", "Epithelial", "Fibroblast",
@@ -195,7 +195,7 @@ methods <- c("ann_level_1_prediction", "celltypist_ann1", "scimilarity_ann1",
 
 truth <- factor(meta.m$ann_level_1)
 
-methods.name = c("MVCell", "celltypist", "SCimiliary", "scATOMIC", "singleR", "scType")
+methods.name = c("CellBRANCH", "celltypist", "SCimiliary", "scATOMIC", "singleR", "scType")
 
 
 score_rows <- lapply(methods, function(m) {

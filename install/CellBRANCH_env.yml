@@ -1,4 +1,4 @@
-name: MVCell
+name: CellBRANCH
 channels:
   - bioconda
   - conda-forge

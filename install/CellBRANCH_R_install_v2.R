@@ -44,6 +44,6 @@ pak::pkg_install(c(
 
 # 7) (Optional) version manifest for reproducibility
 # ver <- as.data.frame(installed.packages()[, c("Package", "Version")])
-# write.csv(ver, "mvcell_base_versions.csv", row.names = FALSE)
+# write.csv(ver, "cellbranch_base_versions.csv", row.names = FALSE)
 
 # Functioning as of 2025-08-12 on Linux.

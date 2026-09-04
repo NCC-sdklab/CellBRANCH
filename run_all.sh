@@ -2,16 +2,16 @@
 set -euo pipefail
 
 #JHL: 제가 멍청해서.
-# Ensure MVCell conda environment is active
-if [[ "$CONDA_DEFAULT_ENV" != "MVCell" ]]; then
-  echo "Error: Please activate the 'MVCell' conda environment first."
+# Ensure CellBRANCH conda environment is active
+if [[ "$CONDA_DEFAULT_ENV" != "CellBRANCH" ]]; then
+  echo "Error: Please activate the 'CellBRANCH' conda environment first."
   echo "Currently active: ${CONDA_DEFAULT_ENV:-none}"
   exit 1
 fi
 
 
 #############################################
-# MVCell full pipeline 
+# CellBRANCH full pipeline 
 # - Step1: R preprocess (h5ad → *_sce.rds)
 # - Step2: R annotate (SingleR, ScType, scATOMIC)  [single run]
 # - Step3: python celltypist + scimilarity + merge
@@ -23,8 +23,8 @@ fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # R scripts
-R_STEP1="${REPO_ROOT}/MVCell_V2_R_init.R"
-R_STEP2="${REPO_ROOT}/MVCell_V2_Run_celltype.R"
+R_STEP1="${REPO_ROOT}/CellBRANCH_V2_R_init.R"
+R_STEP2="${REPO_ROOT}/CellBRANCH_V2_Run_celltype.R"
 
 # Python scripts
 PY_STEP3="${REPO_ROOT}/celltypist_scimilarity_merged.py"
@@ -121,7 +121,7 @@ if [[ "${SCIMIL_MODEL}" == "${DEFAULT_SCIMIL_MODEL}" ]]; then
   fi
 fi
 
-echo "========== MVCell Full Pipeline =========="
+echo "========== CellBRANCH Full Pipeline =========="
 echo "Repo root          : ${REPO_ROOT}"
 echo "H5AD               : ${H5AD}"
 echo "Cores              : ${CORES}"
@@ -150,10 +150,10 @@ Rscript "${R_STEP1}" "${H5AD}" "${CORES}" "${BENCH_NUM}"
 echo "[Step2] R annotate"
 Rscript "${R_STEP2}" "${H5AD}" "${CORES}" "${BENCH_NUM}"
 
-MERGED_CSV="${CELLTYPE_DIR}/${BASENAME}_MVCell_annotate.csv"
+MERGED_CSV="${CELLTYPE_DIR}/${BASENAME}_CellBRANCH_annotate.csv"
 [[ -f "${MERGED_CSV}" ]] || {
   # 혹시 사용자가 full 같은 이름으로 바꿨을 때 대비(드물지만)
-  ALT="${CELLTYPE_DIR}/${BASENAME}_full_MVCell_annotate.csv"
+  ALT="${CELLTYPE_DIR}/${BASENAME}_full_CellBRANCH_annotate.csv"
   if [[ -f "${ALT}" ]]; then
     ln -sf "$(basename "${ALT}")" "${MERGED_CSV}"
   else
@@ -186,7 +186,7 @@ python "${PY_STEP4}" --input "${STEP3_OUT}" \
 # ------------------------------------------
 # Step 5: transformer prediction
 # ------------------------------------------
-PRED_OUTDIR="${OUTDIR}/mvcell_results"
+PRED_OUTDIR="${OUTDIR}/cellbranch_results"
 mkdir -p "${PRED_OUTDIR}"
 
 echo "[Step5] Transformer prediction"

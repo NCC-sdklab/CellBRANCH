@@ -1,9 +1,9 @@
-# MVCell Pipeline Tutorial
+# CellBRANCH Pipeline Tutorial
 
 This folder contains two concise tutorials:
 
-- **A. Full Pipeline**: Run the entire MVCell pipeline from an `.h5ad` file.
-- **B. Step 4 + 5 only**: Run HLCA transfer (Step 4) and MVCell prediction (Step 5) only.
+- **A. Full Pipeline**: Run the entire CellBRANCH pipeline from an `.h5ad` file.
+- **B. Step 4 + 5 only**: Run HLCA transfer (Step 4) and CellBRANCH prediction (Step 5) only.
 
 > We use the demo file you created:
 > - `tutorial_data_set.h5ad` — remove unknown label
@@ -13,13 +13,13 @@ This folder contains two concise tutorials:
 ## Prerequisites
 
 - Conda envs are created per the main README:
-  - `MVCell` (main; R+Python)
-  - `r-reticulate-mvcell` (reticulate helper for scATOMIC)
-- Run these from the repo root: `MVCell/`
+  - `CellBRANCH` (main; R+Python)
+  - `r-reticulate-cellbranch` (reticulate helper for scATOMIC)
+- Run these from the repo root: `CellBRANCH/`
 
 ```bash
 # From repo root
-conda activate MVCell
+conda activate CellBRANCH
 
 ```
 
@@ -35,7 +35,7 @@ data/
 
 ### 2. Run
 ```bash
-cd ./  # repo root (MVCell)
+cd ./  # repo root (CellBRANCH)
 chmod +x run_all.sh
 ./run_all.sh \
     --h5ad ./data/tutorial_data_set.h5ad \
@@ -43,10 +43,10 @@ chmod +x run_all.sh
 ```
 
 ### 3. Outputs
-- `celltype_annotate/_MVCell_annotate.csv` — R tools (SingleR, ScType, scATOMIC) per-cell outputs
+- `celltype_annotate/_CellBRANCH_annotate.csv` — R tools (SingleR, ScType, scATOMIC) per-cell outputs
 - `celltype_annotate/merged_with_pipeline.tsv` — merged with CellTypist & SCimilarity
 - `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA ann_level_1..5 (The result of Step 4)
-- `mvcell_results/` — MVCell outputs (The result of Step 5)
+- `cellbranch_results/` — CellBRANCH outputs (The result of Step 5)
 
 ## B) Step 4 + 5 Only
 Use this when you already have outputs from Step 3 or Step 4.

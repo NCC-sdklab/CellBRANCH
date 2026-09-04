@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# MVCell standalone run script — Part 2 (annotation)
+# CellBRANCH standalone run script — Part 2 (annotation)
 # Runs SingleR, ScType, and scATOMIC, then exports per-cell annotations and scores.
 
 suppressPackageStartupMessages({
@@ -79,7 +79,7 @@ out_rds  <- file.path(out_dir, paste0(out.base, "_sce.rds"))
 out.sr = file.path(celltype.dir, paste0(out.base, "_singleR_result.rds"))
 out.sc = file.path(celltype.dir, paste0(out.base, "_sctype_result.rds"))
 out.sca = file.path(celltype.dir, paste0(out.base, "_scatomic_result.rds"))
-out_csv <- file.path(celltype.dir, paste0(out.base, "_MVCell_annotate.csv"))
+out_csv <- file.path(celltype.dir, paste0(out.base, "_CellBRANCH_annotate.csv"))
 
 
 # ---- setting cores ----
@@ -108,7 +108,7 @@ if (!file.exists(out_rds)) stop("Missing preprocessed RDS: ", out_rds)
 sce <- readRDS(out_rds)
 
 # ----- ScType sources / DB -----
-sctype_base <- Sys.getenv("MVCell_SCTYPE_DIR", unset = script.dir)
+sctype_base <- Sys.getenv("CELLBRANCH_SCTYPE_DIR", unset = script.dir)
 sc_src1 <- file.path(sctype_base, "sctype", "sctype_score_.R")
 sc_src2 <- file.path(sctype_base, "sctype", "gene_sets_prepare.R")
 sc_db   <- file.path(sctype_base, "sctype", "ScTypeDB_full.xlsx")
@@ -123,11 +123,11 @@ ok_env <- FALSE
 try({
   cb <- reticulate::conda_binary()
   cb.base <- sub("/bin/(conda|mamba)$", "", cb)
-  ret.path <- file.path(cb.base, "envs", "r-reticulate-mvcell")
+  ret.path <- file.path(cb.base, "envs", "r-reticulate-cellbranch")
   if (dir.exists(ret.path)) { 
     reticulate::use_condaenv(ret.path, required = TRUE)
     ok_env <- TRUE
-    message("Successfully activated conda environment: r-reticulate-mvcell")
+    message("Successfully activated conda environment: r-reticulate-cellbranch")
   }
 }, silent = TRUE)
 

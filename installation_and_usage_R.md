@@ -1,8 +1,8 @@
-# MVCell
+# CellBRANCH
 Automatic Cell Type Annotation for Single-Cell RNA Data
 
 ## 1. Overview
-MVCell provides a unified environment to run three R-based cell type annotation algorithms for single-cell RNA sequencing (scRNA-seq) data:
+CellBRANCH provides a unified environment to run three R-based cell type annotation algorithms for single-cell RNA sequencing (scRNA-seq) data:
 
 - **SingleR**
 - **ScType**
@@ -14,10 +14,10 @@ The installation process has been tested on Linux-based systems. Other operating
 
 ---
 **🔹 Quick Facts**
-- **Tested R version**: 4.4 (specified in `MVCell_R_env.yaml`).
+- **Tested R version**: 4.4 (specified in `CellBRANCH_R_env.yaml`).
 - **Environment files**:  
-  - `MVCell_R_env.yaml` – R + system dependencies for SingleR, ScType.  
-  - `r-reticulate-mvcell_env.yaml` – Python dependencies for scATOMIC (via `reticulate`).
+  - `CellBRANCH_R_env.yaml` – R + system dependencies for SingleR, ScType.  
+  - `r-reticulate-cellbranch_env.yaml` – Python dependencies for scATOMIC (via `reticulate`).
 - **Input format**: `.h5ad` containing a **count matrix** (mandatory).  
   - Optionally: `logcounts` if you prefer your own log-normalization.  
   - Gene and cell metadata are **not used**.
@@ -39,23 +39,23 @@ The installation process has been tested on Linux-based systems. Other operating
 
 1. **Clone the repository**  
 ```bash
-git clone git@github.com:NCC-sdklab/MVCell.git
-cd MVCell
+git clone git@github.com:NCC-sdklab/CellBRANCH.git
+cd CellBRANCH
 ```
 
 2. **Create the conda environments**  
-Two environments are prepared: `MVCell_R` for providing R environment, and `r-reticulate-mvcell` for imputation required for scATOMIC
+Two environments are prepared: `CellBRANCH_R` for providing R environment, and `r-reticulate-cellbranch` for imputation required for scATOMIC
 ```bash
 cd r-install
-conda env create -f MVCell_R_env.yaml 
-conda env create -f r-reticulate-mvcell_env.yaml
-conda activate MVCell_R
+conda env create -f CellBRANCH_R_env.yaml 
+conda env create -f r-reticulate-cellbranch_env.yaml
+conda activate CellBRANCH_R
 ```
 
 3. **Install R dependencies using `pak`**  
 R-based script is prepared for consistent package management.
 ```r
-Rscript MVCell_R_install_v2.R
+Rscript CellBRANCH_R_install_v2.R
 ```
 
 ## 4. Usage
@@ -63,7 +63,7 @@ Rscript MVCell_R_install_v2.R
 ### Step 1 — Preprocessing  
 Run the first script to preprocess the `.h5ad` file into an R-compatible format:
 ```bash
-Rscript MVCell_V2_R_init.R /path/to/input.h5ad [num_cores] [benchmark_id]
+Rscript CellBRANCH_V2_R_init.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ```
 
 - `num_cores` *(optional)*: Number of CPU cores to use (default: all available minus 2)  
@@ -72,7 +72,7 @@ Rscript MVCell_V2_R_init.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ### Step 2 — Annotation  
 Run the second script to perform cell type annotation using all three algorithms:
 ```bash
-Rscript MVCell_V2_Run_celltype.R /path/to/input.h5ad [num_cores] [benchmark_id]
+Rscript CellBRANCH_V2_Run_celltype.R /path/to/input.h5ad [num_cores] [benchmark_id]
 ```
 
 ### Step 3 — Output  
@@ -82,10 +82,10 @@ Results are saved as:
 - Combined annotation CSV file
 
 ## 5. External intervention
-When, whatever the reason, the celltype annotation does not work, or if you wish to perform it yourself, as long as you provide the correct name and the path, MVCell will integrate without issue.
+When, whatever the reason, the celltype annotation does not work, or if you wish to perform it yourself, as long as you provide the correct name and the path, CellBRANCH will integrate without issue.
 
 ### Step 1 - Preprocessing
-`{sample_name}_sce.rds` is the file produced after `.h5ad` conversion. You may provide your version of `.rds` file. MVCell script checks for consistency; it needs to have `counts` and `logcounts` assays, and the dimensions must match the `.h5ad` file.
+`{sample_name}_sce.rds` is the file produced after `.h5ad` conversion. You may provide your version of `.rds` file. CellBRANCH script checks for consistency; it needs to have `counts` and `logcounts` assays, and the dimensions must match the `.h5ad` file.
 
 ### Step 2 - Annotation
 All celltype annotations are saved in the `celltype_annotate` folder located in the path where your `.h5ad` file is based.  

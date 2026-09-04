@@ -1,6 +1,7 @@
+
 #!/usr/bin/env Rscript
 
-# MVCell standalone run script — Part 2 (annotation)
+# CellBRANCH standalone run script — Part 2 (annotation)
 # Runs SingleR, ScType, and scATOMIC, then exports per-cell annotations and scores.
 
 suppressPackageStartupMessages({
@@ -18,10 +19,10 @@ set.seed(1)
 
 
 #testing args
-args = "/mnt/"
+# args <- commandArgs(trailingOnly = TRUE)
+# if (length(args) < 1) stop("Usage: Rscript script_part2.R /path/to/file.h5ad [num_cores]")
 
-args <- commandArgs(trailingOnly = TRUE)
-if (length(args) < 1) stop("Usage: Rscript script_part2.R /path/to/file.h5ad [num_cores]")
+args = "/mnt/dks_nas2/data/external/Lung/CCCA/Guo_et_al_2018/Guo2018.h5ad"
 
 h5ad_path <- normalizePath(args[1])
 h5ad_dir  <- dirname(h5ad_path)
@@ -43,7 +44,7 @@ if (!is.na(benchmark.num)) {
 
 #names
 out_rds  <- file.path(out_dir, paste0(out.base, "_sce.rds"))
-out_mvcell = file.path(out_dir, "mvcell_results/cell_type_predictions.csv")
+out_cellbranch = file.path(out_dir, "cellbranch_results/cell_type_predictions.csv")
 out_raw_annot = file.path(out_dir, "celltype_annotate/merged_with_pipeline.tsv")
 out_raw_annlevel = file.path(out_dir, "celltype_annotate/merged_annlevel_transfered.tsv")
 
@@ -52,10 +53,10 @@ if (!dir.exists(out_performance)) {
   dir.create(out_performance)
 }
 
-# ----- Load MVCell results -----
+# ----- Load CellBRANCH results -----
 
-if (!file.exists(out_mvcell)) stop("Missing MVCell results: ", out_mvcell)
-mvcell.df = read.csv(out_mvcell)
+if (!file.exists(out_cellbranch)) stop("Missing CellBRANCH results: ", out_cellbranch)
+cellbranch.df = read.csv(out_cellbranch)
 
 if (!file.exists(out_rds)) stop("Missing preprocessed RDS: ", out_rds)
 sce <- readRDS(out_rds)
@@ -63,19 +64,63 @@ sce <- readRDS(out_rds)
 meta = as.data.frame(colData(sce))
 if (!"barcode" %in% colnames(meta)) meta$barcode <- rownames(meta)
 
-if (identical(meta$barcode, mvcell.df$barcode)) {
+if (identical(meta$barcode, cellbranch.df$barcode)) {
   message("barcodes consistent. Proceeding...")
 } else {
   stop("barcode mismatch")
 }
 
-meta.m = merge(meta, mvcell.df, all.x = T, by = "barcode", sorf = F)
+meta.m = merge(meta, cellbranch.df, all.x = T, by = "barcode", sorf = F)
 rownames(meta.m) = meta.m$barcode
 meta.m = meta.m[colnames(sce),]
 
 test.data = as.data.frame(data.table::fread(out_raw_annlevel))
 meta.m = merge(meta.m, test.data, all.x = T, by = "barcode")
 rownames(meta.m) = meta.m$barcode
+
+
+#converting stuff
+table(meta.m$cell_type, meta.m$ann_level_1_prediction)
+table(meta.m$cell_subtype, meta.m$ann_level_3_prediction)
+table(meta.m$cell_subtype, meta.m$scimilarity_ann4)
+table(meta.m$cell_subtype, meta.m$celltypist_ann4)
+
+
+
+reference.annot = "/mnt/gluster_server/jhlee/Projects/python-tools/CellBRANCH/CellBRANCH/data/HLCA_tree.csv"
+ref.df = read.csv(reference.annot)
+
+#refernce changing
+unique.types = unique(meta.m$cell_subtype)
+unique.types = unique.types[!is.na(unique.types)]
+
+map = data.frame(
+  type1 = c("Immune", "Lymphoid", "T cell lineage", "CD8 T cells", NA),
+  type2 = c("Immune", "Lymphoid", "T cell lineage", NA, NA),
+  type3 = c("Immune", "Lymphoid", "T cell lineage", NA, NA),
+  type4 = c("Immune", "Lymphoid", "T cell lineage", "CD4 T cells", NA),
+  type3 = c("Immune", "Lymphoid", "T cell lineage", NA, NA)
+)
+colnames(map) = unique.types
+rownames(map) = paste0("ann_level_", 1:5)
+
+
+col_idx <- match(as.character(meta.m$cell_sub), colnames(map))
+
+# helper to get a mapped vector for a given level name with fallback
+map_level <- function(level_name, idx, fallback = NA_character_) {
+  out <- rep(fallback, length(idx))  # start all with fallback
+  valid <- !is.na(idx)               # only take non-NA indices
+  out[valid] <- map[level_name, idx[valid]]
+  unlist(out)
+}
+
+meta.m$ann_level_1 <- map_level("ann_level_1", col_idx, fallback = "Other")
+meta.m$ann_level_2 <- map_level("ann_level_2", col_idx, fallback = "Other")
+meta.m$ann_level_3 <- map_level("ann_level_3", col_idx, fallback = "Other")
+meta.m$ann_level_4 <- map_level("ann_level_4", col_idx, fallback = "Other")
+meta.m$ann_level_5 <- map_level("ann_level_5", col_idx, fallback = "Other")
+
 
 
 
@@ -133,7 +178,7 @@ methods <- c("ann_level_1_prediction", "celltypist_ann1", "scimilarity_ann1",
 
 truth <- factor(meta.m$ann_level_1)
 
-methods.name = c("MVCell", "celltypist", "SCimiliary", "scATOMIC", "singleR", "scType")
+methods.name = c("CellBRANCH", "celltypist", "SCimiliary", "scATOMIC", "singleR", "scType")
 
 
 score_rows <- lapply(methods, function(m) {
@@ -278,10 +323,10 @@ ggsave(filename = "Level1_performance_celltype_MCC.png", plot = p_mcc, path = ou
 
 #level 2
 
-methods <- c("ann_level_2_prediction", "celltypist_ann2", "scimilarity_ann2",
-             "scATOMIC_ann2", "singleR_ann2",
-             "sctype_ann2")
-truth <- factor(meta.m$ann_level_2)
+methods <- c("ann_level_4_prediction", "celltypist_ann4", "scimilarity_ann4",
+             "scATOMIC_ann4", "singleR_ann4",
+             "sctype_ann4")
+truth <- factor(meta.m$ann_level_4)
 
 
 score_rows <- lapply(methods, function(m) {
@@ -333,10 +378,10 @@ overall.mcc.f1 = ggplot(overall, aes(x = algorithm, y = score, fill = metric)) +
     vjust = -0.3, size = 6
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(title = "Overall performance: Level 2", x = "Method", y = "Score") +
+  labs(title = "Overall performance: Level 4", x = "Method", y = "Score") +
   theme_minimal()
 
-ggsave(filename = "Level2_performance_overall.png", plot = overall.mcc.f1, path = out_performance,
+ggsave(filename = "Level4_performance_overall.png", plot = overall.mcc.f1, path = out_performance,
        width = 7, height = 5, bg = "white")
 
 
@@ -372,13 +417,13 @@ p_f1 <- p0 +
     inherit.aes = FALSE, size = 6
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(title = "F1 per Level-2 cell type", x = "Cell type", y = "F1") +
+  labs(title = "F1 per Level-4 cell type", x = "Cell type", y = "F1") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   )
 
-ggsave(filename = "Level2_performance_celltype_F1.png", plot = p_f1, path = out_performance,
+ggsave(filename = "Level4_performance_celltype_F1.png", plot = p_f1, path = out_performance,
        width = 7, height = 5, bg = "white")
 
 
@@ -419,14 +464,14 @@ p_mcc <- p0_mcc +
     inherit.aes = FALSE, size = 6
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(title = "MCC per Level‑2 cell type", x = "Cell type", y = "MCC") +
+  labs(title = "MCC per Level‑4 cell type", x = "Cell type", y = "MCC") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   )
 
 
-ggsave(filename = "Level2_performance_celltype_MCC.png", plot = p_mcc, path = out_performance,
+ggsave(filename = "Level4_performance_celltype_MCC.png", plot = p_mcc, path = out_performance,
        width = 7, height = 5, bg = "white")
 
 

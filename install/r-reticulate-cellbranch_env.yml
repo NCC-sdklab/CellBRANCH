@@ -1,4 +1,4 @@
-name: r-reticulate-mvcell
+name: r-reticulate-cellbranch
 channels:
   - conda-forge
   - bioconda

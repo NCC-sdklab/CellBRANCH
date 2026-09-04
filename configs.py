@@ -83,7 +83,7 @@ setup(
     description="Bidirectional Hierarchical Transformer for Cell Type Annotation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/NCC-sdklab/MVcell",
+    url="https://github.com/NCC-sdklab/CellBRANCH",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

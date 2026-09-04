@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# MVCell standalone run script
+# CellBRANCH standalone run script
 
 suppressPackageStartupMessages({
   library(zellkonverter)

@@ -1,4 +1,4 @@
-# MVCell
+# CellBRANCH
 
 Automatic cell type annotation for single cell RNA data
 
@@ -37,39 +37,39 @@ Combined Loss: Forward(2.0x) + Reverse(0.2x) + Consistency(0.15x)
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/NCC-sdklab/MVCell.git
-cd MVCell
+git clone https://github.com/NCC-sdklab/CellBRANCH.git
+cd CellBRANCH
 ```
 
 ### 2. Create the required conda environments
 
-MVCell uses three conda environments:
+CellBRANCH uses three conda environments:
 
-- **MVCell** → Main environment containing both R and Python for running all celltype annotations (SingleR, sctype, scATOMIC, celltypist, scimilarity)
-- **r-reticulate-mvcell** → Python environment for R's reticulate interface for scATOMIC
+- **CellBRANCH** → Main environment containing both R and Python for running all celltype annotations (SingleR, sctype, scATOMIC, celltypist, scimilarity)
+- **r-reticulate-cellbranch** → Python environment for R's reticulate interface for scATOMIC
 
 Create them from the provided YAML files:
 
 ```bash
-# Create MVCell env
+# Create CellBRANCH env
 cd isntall
-conda env create -f MVCell_env.yml   # or: mamba env create -f ...
+conda env create -f CellBRANCH_env.yml   # or: mamba env create -f ...
 
 # Create r-reticulate
-conda env create -f r-reticulate-mvcell_env.yml    # or: mamba env create -f ...
+conda env create -f r-reticulate-cellbranch_env.yml    # or: mamba env create -f ...
 ```
 
 **Why two environments?**
 
-- Keeping r-reticulate-mvcell separate avoids Python version/package conflicts with the main MVCell environment.
+- Keeping r-reticulate-cellbranch separate avoids Python version/package conflicts with the main CellBRANCH environment.
 - This separation also keeps r-reticulate alone for other R projects.
 
 ### 3. Install remaining R packages
 
 ```bash
 #cd install
-conda activate MVCell
-Rscript MVCell_R_install_v2.R
+conda activate CellBRANCH
+Rscript CellBRANCH_R_install_v2.R
 ```
 
 ## Quick Start
@@ -82,10 +82,10 @@ Rscript MVCell_R_install_v2.R
 - **Step 2 (R)**: Run SingleR / ScType / scATOMIC and export per-cell CSV
 - **Step 3 (Python)**: Run CellTypist + SCimilarity and merge with Step2 CSV
 - **Step 4 (Python)**: Transfer to HLCA ann_level_1..5
-- **Step 5 (Python)**: MVCell prediction
+- **Step 5 (Python)**: CellBRANCH prediction
 
 ```bash
-# Move to MVCell main folder
+# Move to CellBRANCH main folder
 cd ../
 
 # Give execute permission to run_all.sh
@@ -112,10 +112,10 @@ chmod +x run_all.sh
 
 #### Outputs
 
-- `celltype_annotate/<BASENAME>_MVCell_annotate.csv` — R-based per-cell annotations
+- `celltype_annotate/<BASENAME>_CellBRANCH_annotate.csv` — R-based per-cell annotations
 - `celltype_annotate/merged_with_pipeline.tsv` — merged with CellTypist & SCimilarity
 - `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA levels (ann_level_1..5)
-- `mvcell_results/` — final transformer prediction artifacts
+- `cellbranch_results/` — final transformer prediction artifacts
 
 
 

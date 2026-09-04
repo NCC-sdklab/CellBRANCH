@@ -72,10 +72,10 @@ fi
 
 ########## Conda activate only if needed (avoid -u issues) ##########
 if command -v conda >/dev/null 2>&1; then
-  if [[ "${CONDA_DEFAULT_ENV:-}" != "MVCell" && "${CONDA_PREFIX:-}" != *"/envs/MVCell" ]]; then
+  if [[ "${CONDA_DEFAULT_ENV:-}" != "CellBRANCH" && "${CONDA_PREFIX:-}" != *"/envs/CellBRANCH" ]]; then
     set +u
     eval "$(conda shell.bash hook)"
-    conda activate MVCell || true
+    conda activate CellBRANCH || true
     set -u
   fi
 fi

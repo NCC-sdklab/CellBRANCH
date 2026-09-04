@@ -6,7 +6,7 @@ Transform tool-specific celltype annotations to HLCA ann_level_1..5 columns.
 
 Usage examples:
   # 1) config 기반으로 merged_with_pipeline.tsv 자동 탐색 → 변환
-  python transform_celltype_as_hlca.py --config ./mvcell_parameter.csv
+  python transform_celltype_as_hlca.py --config ./cellbranch_parameter.csv
 
   # 2) 입력/출력 경로 명시
   python transform_celltype_as_hlca.py --input /path/to/merged_with_pipeline.tsv \
@@ -29,7 +29,7 @@ import pandas as pd
 # -------- 매핑 파일 기본(절대경로) --------
 REPO_ROOT = Path(__file__).resolve().parent
 # 환경변수로도 오버라이드 가능 (없으면 ./data)
-DEFAULT_DATA_DIR = Path(os.environ.get("MVCELL_DATA_DIR", REPO_ROOT / "data"))
+DEFAULT_DATA_DIR = Path(os.environ.get("CELLBRANCH_DATA_DIR", REPO_ROOT / "data"))
 
 # 매핑 파일 이름(디렉터리만 바꿔 받는 옵션에서 사용)
 MAPPING_FILENAMES = {
@@ -200,7 +200,7 @@ def write_table(df: pd.DataFrame, path: Path, sep: str):
 
 # -------- CLI --------
 def parse_args():
-    default_config = os.environ.get("PIPELINE_CONFIG", "/home/seokwon/nas1_deep/filled_celltype/mvcell_parameter.csv")
+    default_config = os.environ.get("PIPELINE_CONFIG", "/home/seokwon/nas1_deep/filled_celltype/cellbranch_parameter.csv")
     p = argparse.ArgumentParser(
         description="Transform tool-specific celltype annotations to HLCA ann levels (ann1..ann5)."
     )
