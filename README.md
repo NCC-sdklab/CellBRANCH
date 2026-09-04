@@ -29,7 +29,7 @@ The first full-pipeline run downloads the default SCimilarity model from Zenodo 
 
 ## Quick Start
 
-### Full pipeline from an h5ad file
+### Steps 1-5: Full Pipeline from an h5ad File
 
 The recommended entry point runs all five stages:
 
