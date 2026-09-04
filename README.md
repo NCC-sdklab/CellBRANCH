@@ -1,189 +1,232 @@
 # CellBRANCH
 
-Automatic cell type annotation for single cell RNA data
+**Integrating heterogeneous cell-type annotators through masked bidirectional tree-structured hierarchical classification**
 
-## Integrating heterogeneous cell-type annotators through masked bidirectional tree-structured hierarchical classification
+CellBRANCH integrates predictions from five independent cell-type annotation tools into a coherent path across five levels of the Human Lung Cell Atlas (HLCA) hierarchy. Tool-specific labels are first mapped to a shared naming system, after which a pretrained bidirectional hierarchical transformer combines their labels and confidence scores while enforcing valid parent-child transitions.
 
-A PyTorch implementation of a bidirectional hierarchical transformer model for automated cell type annotation using multiple annotation tools.
+CellBRANCH is an integration model rather than a classifier that reads gene expression directly. The full pipeline in `run_all.sh` starts from an `.h5ad` count matrix, runs the five component annotators, harmonises their outputs, and then applies the CellBRANCH checkpoint.
 
-## Overview
+## Features
 
-This model addresses the challenge of cell type annotation by:
+- Integrates SingleR, ScType, scATOMIC, SCimilarity, and CellTypist.
+- Produces a complete annotation path from `ann_level_1` through `ann_level_5`.
+- Uses a hard parent-child mask derived from `data/HLCA_tree.csv`.
+- Includes the exact pretrained checkpoint used for the manuscript evaluation.
+- Supports the complete `.h5ad` workflow, harmonisation plus prediction, or standalone transformer inference.
+- Uses CUDA automatically when available and otherwise runs transformer inference on CPU.
 
-- **Bidirectional Processing**: Forward (1→2→3→4→5) and reverse (5→4→3→2→1) prediction paths
-- **Hierarchical Constraints**: Enforcing ontological relationships between annotation levels
-- **Multi-tool Integration**: Combining predictions from multiple annotation tools (singleR, sctype, scATOMIC, scimilarity, celltypist)
-- **Consistency Enforcement**: Ensuring predictions maintain biological hierarchy
+## Workflow
 
-## Architecture
-
+```text
+.h5ad count matrix
+        |
+        v
+SingleR | ScType | scATOMIC | SCimilarity | CellTypist
+        |
+        v
+Tool-specific labels and confidence scores
+        |
+        v
+Mapping to the shared five-level HLCA hierarchy
+        |
+        v
+CellBRANCH bidirectional hierarchical transformer
+        |
+        v
+A valid cell-type path at levels 1-5
 ```
-Input: [Tool Annotations + Confidence Scores]
-    ↓
-Feature Projection
-    ↓
-┌─────────────────┬─────────────────┐
-│  Forward Path   │  Reverse Path   │
-│   (1→2→3→4→5)   │   (5→4→3→2→1)   │
-│  + Hierarchy    │  + Cross-Attn   │
-│  Constraints    │  with Forward   │
-└─────────────────┴─────────────────┘
-    ↓
-Combined Loss: Forward(2.0x) + Reverse(0.2x) + Consistency(0.15x)
-```
+
+The model input contains five mapped labels from each annotator, giving 25 categorical features, plus one confidence score per annotator. During training, the forward and reverse decoders exchange information across hierarchy depth and are regularised for consistency. At inference, the masked forward decoder supplies the reported five-level path.
+
+The bundled checkpoint uses a model dimension of 256, eight attention heads, three decoder layers, and dropout of 0.1007. The forward, reverse, and consistency loss weights are 2.0, 0.2, and 0.15, respectively.
 
 ## Installation
 
-### 1. Clone the repository
+CellBRANCH is designed for Linux and uses two Conda environments. A CUDA-capable GPU is optional for transformer inference. The full component-annotation workflow also requires R and may take substantially longer on large datasets.
 
 ```bash
 git clone https://github.com/NCC-sdklab/CellBRANCH.git
 cd CellBRANCH
-```
 
-### 2. Create the required conda environments
+cd install
+conda env create -f CellBRANCH_env.yml
+conda env create -f r-reticulate-cellbranch_env.yml
 
-CellBRANCH uses three conda environments:
-
-- **CellBRANCH** → Main environment containing both R and Python for running all celltype annotations (SingleR, sctype, scATOMIC, celltypist, scimilarity)
-- **r-reticulate-cellbranch** → Python environment for R's reticulate interface for scATOMIC
-
-Create them from the provided YAML files:
-
-```bash
-# Create CellBRANCH env
-cd isntall
-conda env create -f CellBRANCH_env.yml   # or: mamba env create -f ...
-
-# Create r-reticulate
-conda env create -f r-reticulate-cellbranch_env.yml    # or: mamba env create -f ...
-```
-
-**Why two environments?**
-
-- Keeping r-reticulate-cellbranch separate avoids Python version/package conflicts with the main CellBRANCH environment.
-- This separation also keeps r-reticulate alone for other R projects.
-
-### 3. Install remaining R packages
-
-```bash
-#cd install
 conda activate CellBRANCH
 Rscript CellBRANCH_R_install_v2.R
+cd ..
 ```
+
+Mamba can be used in place of Conda when creating the environments. The R installer should be run from the `install/` directory because it loads the accompanying dependency script by relative path.
+
+The first full-pipeline run downloads the default SCimilarity model from Zenodo when `scimilarity/model_v1.1` is absent. Internet access is therefore required for initial environment setup and model download.
 
 ## Quick Start
 
-### 1) Full pipeline with run_all.sh (recommended)
+### Full pipeline from an h5ad file
 
-`run_all.sh` runs the entire pipeline:
+The recommended entry point runs all five stages:
 
-- **Step 1 (R)**: Convert .h5ad → *_sce.rds
-- **Step 2 (R)**: Run SingleR / ScType / scATOMIC and export per-cell CSV
-- **Step 3 (Python)**: Run CellTypist + SCimilarity and merge with Step2 CSV
-- **Step 4 (Python)**: Transfer to HLCA ann_level_1..5
-- **Step 5 (Python)**: CellBRANCH prediction
+1. Convert the `.h5ad` object to a SingleCellExperiment object.
+2. Run SingleR, ScType, and scATOMIC.
+3. Run CellTypist and SCimilarity and merge all component outputs.
+4. Map component labels to the five-level HLCA hierarchy.
+5. Run CellBRANCH inference.
 
 ```bash
-# Move to CellBRANCH main folder
-cd ../
+conda activate CellBRANCH
 
-# Give execute permission to run_all.sh
-chmod +x run_all.sh
-
-# Run pipeline
-./run_all.sh \
-  --h5ad /path/to/your_dataset.h5ad \
+bash run_all.sh \
+  --h5ad /path/to/dataset.h5ad \
   --cores 16 \
+  --outdir results/dataset
 ```
 
-#### Options
+The input must contain raw counts in the `counts` assay or in `X`. When only `X` is present, the pipeline treats it as raw counts. It creates `logcounts` when needed.
 
-- `--h5ad` (required): input .h5ad path
-- `--cores`: CPU cores for R steps (default: available-2)
-- `--outdir`: output directory (default: same as --h5ad dir)
-- `--scimilarity-model`: SCimilarity model directory (default: ./scimilarity/model_v1.1)
-  
-  When the default path is used, the model tarball is auto-downloaded & extracted at first run.
+Useful options are:
 
-- `--mapping-dir`: mapping DB for HLCA transfer (default: ./data/transform_db)
-- `--ontology`: ontology CSV (default: ./data/HLCA_tree.csv)
-- `--transformer-model`: transformer model dir (default: ./pretrained_model/)
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--h5ad` | required | Input AnnData file |
+| `--cores` | available cores minus two | CPU cores used by the R steps |
+| `--outdir` | input file directory | Pipeline output directory |
+| `--scimilarity-model` | `scimilarity/model_v1.1` | SCimilarity model directory |
+| `--mapping-dir` | `data/transform_db` | Label-mapping tables |
+| `--ontology` | `data/HLCA_tree.csv` | Five-level hierarchy |
+| `--transformer-model` | `pretrained_model` | CellBRANCH checkpoint directory |
 
-#### Outputs
+The full pipeline writes:
 
-- `celltype_annotate/<BASENAME>_CellBRANCH_annotate.csv` — R-based per-cell annotations
-- `celltype_annotate/merged_with_pipeline.tsv` — merged with CellTypist & SCimilarity
-- `celltype_annotate/merged_annlevel_transfered.tsv` — HLCA levels (ann_level_1..5)
-- `cellbranch_results/` — final transformer prediction artifacts
+```text
+<outdir>/
+|-- celltype_annotate/
+|   |-- <dataset>_CellBRANCH_annotate.csv
+|   |-- merged_with_pipeline.tsv
+|   `-- merged_annlevel_transfered.tsv
+`-- cellbranch_results/
+    |-- cell_type_predictions.csv
+    `-- prediction_summary_report.txt
+```
 
+The spelling `merged_annlevel_transfered.tsv` is retained because it is the filename used by the current pipeline.
 
+### Standalone CellBRANCH inference
 
-### 2) Standalone Transformer Prediction (predict.py only)
-
-Run transformer inference directly on HLCA-transferred TSV (e.g., merged_annlevel_transfered.tsv):
+Use `predict.py` when component predictions have already been mapped to the HLCA hierarchy. The bundled test set provides a reproducible example:
 
 ```bash
+conda activate CellBRANCH
+
 python predict.py \
-    --model-dir ./pretrained_model \
-    --data-dir ./data \
-    --test-file test_set.tsv \ # You can replace the data with your own files. Make sure to place them in the `data/` folder.
-    --output-dir ./results
+  --model-dir pretrained_model \
+  --data-dir data \
+  --test-file test_set.tsv \
+  --ont-file HLCA_tree.csv \
+  --output-dir results/example
 ```
 
-## Command Line Arguments
+Key arguments are:
 
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| `--model-dir` | str | Required | Directory containing trained model |
-| `--data-dir` | str | . | Data directory path |
-| `--test-file` | str | test_data.tsv | Test data file (HLCA-transferred) |
-| `--batch-size` | int | 1024 | Prediction batch size |
-| `--seed` | int | 9401 | Random seed |
-| `--output-dir` | str | ./results | Output directory |
+| Argument | Default | Purpose |
+| --- | --- | --- |
+| `--model-dir` | required | Directory containing the pretrained `.pt` checkpoint |
+| `--data-dir` | `.` | Base directory for the input table and ontology |
+| `--test-file` | `test_data.tsv` | Tab-separated mapped annotation table |
+| `--ont-file` | `HLCA_tree.csv` | Hierarchy CSV relative to `--data-dir` |
+| `--batch-size` | `1024` | Inference batch size |
+| `--seed` | `9401` | Random seed |
+| `--output-dir` | `results` | Prediction output directory |
 
-## Data Layout (for training/inference)
+### Harmonisation and inference only
 
-```
-data/
-├── train_set.tsv            # (training)
-├── test_set.tsv             # (inference)
-└── HLCA_tree.csv            # ontology
-```
+If raw outputs from the five component annotators are already available, Steps 4 and 5 can be run without repeating annotation:
 
-**Expected columns (inference):**
+```bash
+conda activate CellBRANCH
 
-- Tool scores: `{tool}_score` for tools in {singleR, sctype, scATOMIC, scimilarity, celltypist}
-- (If present) Tool levels: `{tool}_ann{1..5}`
-- (Optional) Ground truth levels for eval: `ann_level_{1..5}`
-
-## System Requirements
-
-- **Minimum Linux version:** 22.04 LTS
-
-## GPU Requirements
-
-- This project uses PyTorch built with CUDA 12.x.
-- **Minimum NVIDIA GPU:** Compute Capability **≥ 7.0**.
-- **Not supported:** Pascal (6.x), e.g. **GT 1030, GTX 1050/1060/1070/1080, Titan Xp**.
-- **Supported families:** Volta/Turing/Ampere/Ada/Hopper and newer (7.x/8.x/9.x/…).
-- If your GPU is older than CC 7.0, run on CPU (e.g., set `CUDA_VISIBLE_DEVICES=""`) or use a legacy PyTorch/CUDA stack.
-
-## Citation If you use this code in your research, please cite:
-```bibtex
-@article{bidirectional_transformer_2025,
-  title={Bidirectional Hierarchical Transformer for Cell Type Annotation},
-  author={Your Name},
-  journal={Journal Name},
-  year={2025}
-}
+bash tutorial/run_step45.sh \
+  --merged-tsv data/step45_tutorial_data_set.tsv \
+  --mapping-dir data/transform_db \
+  --model-dir pretrained_model \
+  --data-dir data \
+  --outdir tutorial/step45_results
 ```
 
-## License
+This writes the mapped table to `tutorial/step45_results/merged_annlevel_transfered.tsv` and final predictions to `tutorial/step45_results/step5_result/`.
 
-MIT License — see LICENSE.
+## Input Contract
 
-## Acknowledgments
+Standalone inference expects a tab-separated table with a `barcode` column. For each of the five annotators, it accepts the mapped columns `{tool}_ann1` through `{tool}_ann5` and a `{tool}_score` column, where `{tool}` is one of:
 
-- Thanks to the developers of the cell type annotation tools: singleR, sctype, scATOMIC, scimilarity, and celltypist 
-- Human Lung Cell Atlas (HLCA) for providing the ontological framework
+```text
+singleR
+sctype
+scATOMIC
+scimilarity
+celltypist
+```
+
+Column names are case-sensitive. Missing annotation columns are represented internally as `Unknown`, and missing score columns are set to `0.0`. This permits inference with a missing component while retaining the same pretrained integration model. Optional `ann_level_1` through `ann_level_5` columns are used only when reference labels are available for evaluation.
+
+For the Steps 4 and 5 workflow, `data/step45_tutorial_data_set.tsv` demonstrates the pre-mapping format: one `{tool}_annot` and one `{tool}_score` column per component, together with `barcode`.
+
+## Repository Layout
+
+```text
+CellBRANCH/
+|-- data/
+|   |-- HLCA_tree.csv
+|   |-- test_set.tsv
+|   |-- step45_tutorial_data_set.tsv
+|   `-- transform_db/
+|-- install/
+|   |-- CellBRANCH_env.yml
+|   |-- r-reticulate-cellbranch_env.yml
+|   `-- CellBRANCH_R_install_v2.R
+|-- pretrained_model/
+|   `-- model.pt
+|-- tutorial/
+|   `-- run_step45.sh
+|-- run_all.sh
+|-- transform_column.py
+|-- predict.py
+|-- model.py
+`-- configs.py
+```
+
+## Reproducibility
+
+The bundled checkpoint and hierarchy are the versions used for the current manuscript analyses:
+
+```text
+pretrained_model/model.pt
+SHA-256: c102439710d11ab13efbe49163a7a30773dac928388ded7efe3aa3c6743d59fb
+
+data/HLCA_tree.csv
+SHA-256: a5e7fd0327a3ffa00af45e25d8974e117b082409a96d80bc49272c0f5cd4dbae
+```
+
+Verify them locally with:
+
+```bash
+sha256sum pretrained_model/model.pt data/HLCA_tree.csv
+```
+
+The included `data/test_set.tsv` contains 1,999 held-out cells. `data/step45_tutorial_data_set.tsv` contains 6,000 rows for demonstrating label harmonisation and inference.
+
+## Scope
+
+In the manuscript evaluation, CellBRANCH outperformed each of its five component annotators in macro-F1 and Matthews correlation coefficient at all five hierarchy levels on held-out HLCA cells. The Matthews correlation coefficient difference over the strongest component increased from 0.044 at level 1 to 0.310 at level 5. Across ten independent lung cancer studies, the evaluation comprised 498,250 cells. When all five component annotators were incorrect, CellBRANCH recovered the reference label for 49.1% of cells at level 4 and 55.8% at level 5.
+
+The same pretrained integration model was also evaluated on Visium HD spatial transcriptomics without retraining. Spatial segmentation and cell-by-gene matrix generation must be completed before running the annotation and integration workflow; those preprocessing steps are outside this repository's default command-line interface.
+
+## Citation
+
+The manuscript citation will be added when it becomes available:
+
+> CellBRANCH: Integrating heterogeneous cell-type annotators through masked bidirectional tree-structured hierarchical classification.
+
+## Acknowledgements
+
+We thank the developers of SingleR, ScType, scATOMIC, SCimilarity, and CellTypist, and the Human Lung Cell Atlas consortium for the reference atlas and cell-type hierarchy used in this work.
