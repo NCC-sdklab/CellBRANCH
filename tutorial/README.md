@@ -6,7 +6,8 @@ This folder contains two concise tutorials:
 - **B. Step 4 + 5 only**: Run HLCA transfer (Step 4) and CellBRANCH prediction (Step 5) only.
 
 > We use the demo file you created:
-> - `tutorial_data_set.h5ad` — remove unknown label
+> - `tutorial_data_set_rawcounts.h5ad` — remove unknown label; `X` holds raw integer counts
+>   (the same 6,000 cells as `tutorial_data_set.h5ad`, whose `X` is normalised)
 
 
 
@@ -30,7 +31,7 @@ This will run the entire pipeline using `run_all.sh`.
 Place your `.h5ad` under a working directory, e.g.:
 ```
 data/
-└── tutorial_data_set.h5ad
+└── tutorial_data_set_rawcounts.h5ad
 ```
 
 ### 2. Run
@@ -38,7 +39,7 @@ data/
 cd ./  # repo root (CellBRANCH)
 chmod +x run_all.sh
 ./run_all.sh \
-    --h5ad ./data/tutorial_data_set.h5ad \
+    --h5ad ./data/tutorial_data_set_rawcounts.h5ad \
     --cores 16
 ```
 
